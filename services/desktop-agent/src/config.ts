@@ -48,7 +48,7 @@ export const config = {
   /** The desktop's own linking token (its user's JWT) for presence + closing sessions. */
   token: process.env.POCKETDEV_TOKEN ?? '',
   /** Public tunnel URL (cloudflared) the phone reaches this agent through. */
-  tunnelUrl: process.env.POCKETDEV_TUNNEL_URL || undefined,
+  tunnelUrl: process.env.POCKETDEV_TUNNEL_URL || 'http://127.0.0.1:4000',
   /** Shared with the server to verify the phone's short-lived PTY token. */
   jwtSecret: process.env.JWT_SECRET ?? 'change-me-in-production',
   shell: defaultShell(),

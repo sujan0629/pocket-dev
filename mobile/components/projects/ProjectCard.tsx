@@ -22,42 +22,44 @@ export function ProjectCard({ project, onPress }: ProjectCardProps) {
       accessibilityLabel={`Open ${project.name}`}
       accessibilityHint="Opens the project workspace"
       onPress={onPress}
-      className="rounded-2xl border border-slate-800 bg-slate-900 p-4 active:border-cyan-500/50 active:bg-slate-800"
+      className="rounded-2xl border border-white/[0.08] bg-[#1C1C1E] p-4 active:bg-[#2C2C2E]/75 active:scale-[0.99]"
     >
-      <View className="flex-row items-start gap-3">
-        <View className="h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10">
-          <Ionicons name="code-slash" size={23} color={colors.primary} />
+      <View className="flex-row items-center gap-3.5">
+        <View className="h-11 w-11 items-center justify-center rounded-xl bg-[#0091FF]/15 border border-[#0091FF]/20">
+          <Ionicons name="folder" size={22} color={colors.primary} />
         </View>
 
         <View className="min-w-0 flex-1">
           <AppText variant="heading" numberOfLines={1}>
             {project.name}
           </AppText>
-          <AppText variant="mono" className="mt-0.5 text-xs text-slate-500" numberOfLines={1}>
+          <AppText variant="mono" className="mt-0.5 text-xs text-[rgba(235,235,245,0.45)]" numberOfLines={1}>
             {project.slug}
           </AppText>
         </View>
 
-        <View className="h-9 w-9 items-center justify-center rounded-xl bg-slate-800">
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-        </View>
+        <Ionicons name="chevron-forward" size={18} color="rgba(235, 235, 245, 0.30)" />
       </View>
 
       {project.description ? (
-        <AppText variant="caption" className="mt-4 leading-5" numberOfLines={2}>
+        <AppText variant="caption" className="mt-3 leading-5 text-[rgba(235,235,245,0.70)]" numberOfLines={2}>
           {project.description}
         </AppText>
-      ) : (
-        <AppText variant="caption" className="mt-4 italic text-slate-500">
-          No description yet
-        </AppText>
-      )}
+      ) : null}
 
-      <View className="mt-4 flex-row items-center border-t border-slate-800 pt-3">
-        <Ionicons name="time-outline" size={15} color={colors.subtle} />
-        <AppText variant="caption" className="ml-1.5 text-xs">
+      <View className="mt-3.5 flex-row items-center border-t border-white/[0.06] pt-3">
+        <Ionicons name="time-outline" size={14} color={colors.muted} />
+        <AppText variant="caption" className="ml-1.5 text-xs text-[rgba(235,235,245,0.50)]">
           {activityLabel}
         </AppText>
+        {project.desktopPath ? (
+          <View className="ml-auto flex-row items-center gap-1">
+            <Ionicons name="desktop-outline" size={13} color={colors.muted} />
+            <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.50)]">
+              Desktop
+            </AppText>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );

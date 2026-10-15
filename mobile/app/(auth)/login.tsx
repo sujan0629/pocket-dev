@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
@@ -8,6 +9,7 @@ import { AuthShell } from '@/components/auth/AuthShell';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { colors } from '@/constants/theme';
 import { useAuth } from '@/providers/AuthProvider';
 import { getErrorMessage } from '@/utils/errors';
 
@@ -41,8 +43,8 @@ export default function LoginScreen() {
 
   return (
     <AuthShell
-      title="Welcome back"
-      subtitle="Your projects, terminal sessions, and Git workflow—right from your pocket."
+      title="Welcome Back"
+      subtitle="Your workspaces, terminal sessions, and Git workflow—right from your pocket."
     >
       <View className="gap-4">
         <Controller
@@ -83,12 +85,15 @@ export default function LoginScreen() {
           )}
         />
         {errors.root?.message ? (
-          <AppText className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {errors.root.message}
-          </AppText>
+          <View className="flex-row items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#1C1C1E] px-4 py-3">
+            <Ionicons name="alert-circle" size={18} color={colors.danger} />
+            <AppText className="flex-1 text-xs text-[#FF453A] leading-4.5">
+              {errors.root.message}
+            </AppText>
+          </View>
         ) : null}
         <Button
-          label="Sign in"
+          label="Sign In"
           icon="arrow-forward"
           size="lg"
           fullWidth
@@ -97,20 +102,20 @@ export default function LoginScreen() {
         />
       </View>
 
-      <View className="mt-8 flex-row items-center justify-center gap-1">
+      <View className="mt-8 flex-row items-center justify-center gap-1.5">
         <AppText variant="caption">New to PocketDev?</AppText>
         <Link href="/(auth)/register" asChild>
-          <Pressable hitSlop={8}>
-            <AppText className="font-semibold text-cyan-300">Create an account</AppText>
+          <Pressable hitSlop={10} className="active:opacity-60">
+            <AppText className="font-semibold text-[#0091FF]">Create an account</AppText>
           </Pressable>
         </Link>
       </View>
       <Button
-        label="Server connection"
+        label="Server Connection"
         icon="server-outline"
         variant="ghost"
         fullWidth
-        className="mt-4"
+        className="mt-3"
         onPress={() => router.push('/(auth)/server')}
       />
     </AuthShell>

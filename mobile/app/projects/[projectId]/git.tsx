@@ -2,7 +2,7 @@ import type { GitPushProgress } from '@pocketdev/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 import { gitApi, projectsApi } from '@/api/pocketdev';
@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/StateView';
 import { colors } from '@/constants/theme';
+import { cn } from '@/utils/cn';
 import { getErrorMessage } from '@/utils/errors';
 import { formatRelativeDate } from '@/utils/format';
 
@@ -77,7 +78,7 @@ export default function GitScreen() {
     mutationFn: () => gitApi.init(projectId),
     onSuccess: async () => {
       await invalidateGit();
-      Toast.show({ type: 'success', text1: 'Git repository initialized' });
+      Toast.show({ type: 'success', text1: 'Repository Initialized' });
     },
     onError: (error) =>
       Toast.show({ type: 'error', text1: 'Git init failed', text2: getErrorMessage(error) }),
@@ -97,7 +98,7 @@ export default function GitScreen() {
     onSuccess: async (result) => {
       setRemoteVisible(false);
       await invalidateGit();
-      Toast.show({ type: 'success', text1: 'Origin updated', text2: result.remote });
+      Toast.show({ type: 'success', text1: 'Origin Updated', text2: result.remote });
     },
     onError: (error) =>
       Toast.show({ type: 'error', text1: 'Remote failed', text2: getErrorMessage(error) }),
@@ -146,7 +147,7 @@ export default function GitScreen() {
         invalidateGit(),
         queryClient.invalidateQueries({ queryKey: ['files', projectId] }),
       ]);
-      Toast.show({ type: 'success', text1: 'Pull complete' });
+      Toast.show({ type: 'success', text1: 'Pull Complete' });
     },
     onError: (error) =>
       Toast.show({ type: 'error', text1: 'Pull failed', text2: getErrorMessage(error) }),
@@ -171,7 +172,7 @@ export default function GitScreen() {
         {notRepository ? (
           <EmptyState
             icon="git-branch-outline"
-            title="Git is not initialized"
+            title="Git is Not Initialized"
             description={
               projectQuery.data?.desktopPath
                 ? 'Initialize Git directly in the selected desktop folder.'
@@ -190,26 +191,31 @@ export default function GitScreen() {
   const status = statusQuery.data;
   const pushPercent = Math.max(0, Math.min(100, pushProgress?.percent ?? 0));
   const pushProgressWidth = `${pushPercent}%` as `${number}%`;
+
   return (
-    <Screen
-      scroll
-      contentClassName="gap-4 pt-4"
-      scrollProps={{
-        refreshControl: (
+    <Screen>
+      <AppHeader title="Git" subtitle={projectQuery.data?.name} back />
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="gap-4 px-4 pb-24 pt-4"
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+        refreshControl={
           <RefreshControl
             refreshing={statusQuery.isRefetching}
             onRefresh={() => void invalidateGit()}
             tintColor={colors.primary}
+            colors={[colors.primary]}
+            progressBackgroundColor={colors.elevated}
           />
-        ),
-      }}
-    >
-      <AppHeader title="Git" subtitle={projectQuery.data?.name} back />
-      <Card>
+        }
+      >
+
+      <Card className="gap-3.5 border border-white/[0.08] bg-[#1C1C1E]">
         <View className="flex-row items-start justify-between gap-3">
           <View>
-            <AppText variant="label">Current branch</AppText>
-            <AppText variant="heading" className="mt-1">
+            <AppText variant="label">Current Branch</AppText>
+            <AppText variant="heading" className="mt-0.5 text-[18px]">
               {status.branch}
             </AppText>
           </View>
@@ -219,25 +225,27 @@ export default function GitScreen() {
             dot
           />
         </View>
-        <View className="mt-4 flex-row gap-3">
-          <View className="flex-1 rounded-xl bg-slate-800 p-3">
-            <AppText variant="caption">Ahead</AppText>
-            <AppText variant="heading">{status.ahead}</AppText>
+
+        <View className="mt-1 flex-row gap-2.5">
+          <View className="flex-1 rounded-xl border border-white/[0.06] bg-[#2C2C2E] p-3">
+            <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.50)]">Ahead</AppText>
+            <AppText variant="heading" className="text-[17px] text-white">{status.ahead}</AppText>
           </View>
-          <View className="flex-1 rounded-xl bg-slate-800 p-3">
-            <AppText variant="caption">Behind</AppText>
-            <AppText variant="heading">{status.behind}</AppText>
+          <View className="flex-1 rounded-xl border border-white/[0.06] bg-[#2C2C2E] p-3">
+            <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.50)]">Behind</AppText>
+            <AppText variant="heading" className="text-[17px] text-white">{status.behind}</AppText>
           </View>
-          <View className="flex-1 rounded-xl bg-slate-800 p-3">
-            <AppText variant="caption">Branches</AppText>
-            <AppText variant="heading">{branchesQuery.data?.all.length ?? '—'}</AppText>
+          <View className="flex-1 rounded-xl border border-white/[0.06] bg-[#2C2C2E] p-3">
+            <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.50)]">Branches</AppText>
+            <AppText variant="heading" className="text-[17px] text-white">{branchesQuery.data?.all.length ?? '—'}</AppText>
           </View>
         </View>
-        <View className="mt-4 border-t border-slate-800 pt-3">
-          <AppText variant="caption">Origin</AppText>
+
+        <View className="border-t border-white/[0.06] pt-3">
+          <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.50)]">Origin</AppText>
           <AppText
             variant="mono"
-            className={`mt-1 text-xs ${status.remoteUrl ? 'text-cyan-300' : 'text-slate-500'}`}
+            className={`mt-0.5 text-xs ${status.remoteUrl ? 'text-[#64D2FF]' : 'text-[rgba(235,235,245,0.40)]'}`}
             numberOfLines={2}
           >
             {status.remoteUrl ?? 'Not connected'}
@@ -245,22 +253,36 @@ export default function GitScreen() {
         </View>
       </Card>
 
-      <View className="flex-row rounded-xl bg-slate-900 p-1">
-        {(['changes', 'history'] as const).map((value) => (
-          <AppText
-            key={value}
-            onPress={() => setSection(value)}
-            className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-semibold ${
-              section === value ? 'bg-slate-700 text-white' : 'text-slate-500'
-            }`}
-          >
-            {value === 'changes' ? 'Changes' : 'History'}
-          </AppText>
-        ))}
+      {/* Apple iOS Segmented Control */}
+      <View className="flex-row rounded-xl border border-white/[0.08] bg-[#1C1C1E] p-1">
+        {(['changes', 'history'] as const).map((value) => {
+          const selected = section === value;
+          return (
+            <Pressable
+              key={value}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => setSection(value)}
+              className={cn(
+                'flex-1 items-center justify-center rounded-lg py-2 transition-all active:opacity-80',
+                selected ? 'bg-[#2C2C2E] shadow-sm' : 'bg-transparent',
+              )}
+            >
+              <AppText
+                className={cn(
+                  'text-xs font-semibold',
+                  selected ? 'text-white' : 'text-[rgba(235,235,245,0.55)]',
+                )}
+              >
+                {value === 'changes' ? 'Changes' : 'History'}
+              </AppText>
+            </Pressable>
+          );
+        })}
       </View>
 
       {section === 'changes' ? (
-        <Card className="overflow-hidden p-0">
+        <Card className="overflow-hidden p-0 border border-white/[0.08] bg-[#1C1C1E]">
           {status.files.length ? (
             status.files.map((file) => (
               <GitFileRow key={file.path} file={file} onPress={() => setDiffPath(file.path)} />
@@ -268,27 +290,27 @@ export default function GitScreen() {
           ) : (
             <EmptyState
               icon="checkmark-circle-outline"
-              title="Working tree clean"
+              title="Working Tree Clean"
               description="There are no changes to commit."
             />
           )}
         </Card>
       ) : (
-        <Card className="overflow-hidden p-0">
+        <Card className="overflow-hidden p-0 border border-white/[0.08] bg-[#1C1C1E]">
           {logQuery.isLoading ? (
             <LoadingState label="Loading commits…" />
           ) : logQuery.data?.length ? (
             logQuery.data.map((entry) => (
-              <View key={entry.hash} className="border-b border-slate-800 px-4 py-3">
+              <View key={entry.hash} className="border-b border-white/[0.06] px-4 py-3">
                 <View className="flex-row items-center gap-2">
-                  <AppText variant="mono" className="text-xs text-cyan-300">
+                  <AppText variant="mono" className="text-xs text-[#64D2FF]">
                     {entry.hash}
                   </AppText>
-                  <AppText className="min-w-0 flex-1 font-semibold text-white" numberOfLines={1}>
+                  <AppText className="min-w-0 flex-1 font-semibold text-white text-[14px]" numberOfLines={1}>
                     {entry.message}
                   </AppText>
                 </View>
-                <AppText variant="caption" className="mt-1">
+                <AppText variant="caption" className="mt-1 text-xs text-[rgba(235,235,245,0.50)]">
                   {entry.author} · {formatRelativeDate(entry.date)}
                 </AppText>
               </View>
@@ -296,25 +318,25 @@ export default function GitScreen() {
           ) : (
             <EmptyState
               icon="time-outline"
-              title="No commits yet"
-              description="Your first commit will appear here."
+              title="No Commits Yet"
+              description="Your commit history will appear here."
             />
           )}
         </Card>
       )}
 
       {pushProgress ? (
-        <Card className="gap-3 border-cyan-500/30">
+        <Card className="gap-3 border border-[#0091FF]/30 bg-[#1C1C1E]">
           <View className="flex-row items-start justify-between gap-3">
             <View className="min-w-0 flex-1">
               <AppText variant="label">
                 {pushProgress.status === 'COMPLETED'
-                  ? 'Push complete'
+                  ? 'Push Complete'
                   : pushProgress.status === 'FAILED'
-                    ? 'Push failed'
-                    : 'Pushing to origin'}
+                    ? 'Push Failed'
+                    : 'Pushing to Origin'}
               </AppText>
-              <AppText className="mt-1 text-sm text-slate-300" numberOfLines={3}>
+              <AppText className="mt-1 text-xs text-[rgba(235,235,245,0.75)]" numberOfLines={3}>
                 {pushProgress.error ?? pushProgress.message}
               </AppText>
             </View>
@@ -329,21 +351,21 @@ export default function GitScreen() {
               }
             />
           </View>
-          <View className="h-2 overflow-hidden rounded-full bg-slate-800">
+          <View className="h-2 overflow-hidden rounded-full bg-white/10">
             <View
               className={`h-full rounded-full ${
-                pushProgress.status === 'FAILED' ? 'bg-red-400' : 'bg-cyan-400'
+                pushProgress.status === 'FAILED' ? 'bg-[#FF453A]' : 'bg-[#0091FF]'
               }`}
               style={{ width: pushProgressWidth }}
             />
           </View>
-          <AppText variant="mono" className="text-[11px] text-slate-500">
+          <AppText variant="mono" className="text-[11px] text-[rgba(235,235,245,0.45)]">
             {pushProgress.branch} · {pushProgress.stage.toLowerCase()} · {pushElapsedSeconds}s
           </AppText>
         </Card>
       ) : null}
 
-      <View className="flex-row gap-2">
+      <View className="flex-row gap-2.5">
         <Button
           label="Pull"
           icon="arrow-down"
@@ -363,30 +385,31 @@ export default function GitScreen() {
         />
       </View>
       <Button
-        label="Commit all changes"
+        label="Commit All Changes"
         icon="git-commit-outline"
         fullWidth
         disabled={status.clean}
         onPress={() => setCommitVisible(true)}
       />
       <Button
-        label="Configure origin"
+        label="Configure Origin"
         icon="link-outline"
         variant="ghost"
         fullWidth
         onPress={() => setRemoteVisible(true)}
       />
-      <AppText variant="caption" className="text-center leading-5">
+      <AppText variant="caption" className="text-center text-xs text-[rgba(235,235,245,0.45)] leading-4.5">
         Commit stages every changed file. Push and pull use credentials configured on the{' '}
         {projectQuery.data?.desktopPath ? 'connected desktop' : 'PocketDev server'}.
       </AppText>
+      </ScrollView>
 
       {commitVisible ? (
         <GitTextModal
           visible
-          title="Commit all changes"
+          title="Commit All Changes"
           description={`${status.files.length} changed file${status.files.length === 1 ? '' : 's'} will be staged and committed.`}
-          label="Commit message"
+          label="Commit Message"
           placeholder="Describe your changes"
           actionLabel="Commit"
           multiline
@@ -398,13 +421,13 @@ export default function GitScreen() {
       {remoteVisible ? (
         <GitTextModal
           visible
-          title="Configure origin"
+          title="Configure Origin"
           description={`HTTPS credentials or SSH keys must already be configured on the ${
             projectQuery.data?.desktopPath ? 'connected desktop' : 'PocketDev server'
           }.`}
           label="Remote URL"
           placeholder="git@github.com:owner/repo.git"
-          actionLabel="Save origin"
+          actionLabel="Save Origin"
           loading={remoteMutation.isPending}
           onClose={() => setRemoteVisible(false)}
           onSubmit={(url) => remoteMutation.mutate(url)}

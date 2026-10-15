@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, FlatList, RefreshControl, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
 import { filesApi, projectsApi } from '@/api/pocketdev';
@@ -87,7 +88,7 @@ export default function FilesScreen() {
         queryClient.invalidateQueries({ queryKey: ['files', projectId] }),
         queryClient.invalidateQueries({ queryKey: ['git', projectId] }),
       ]);
-      Toast.show({ type: 'success', text1: 'Deleted' });
+      Toast.show({ type: 'success', text1: 'File Deleted' });
     },
     onError: (error) =>
       Toast.show({ type: 'error', text1: 'Could not delete', text2: getErrorMessage(error) }),
@@ -109,7 +110,7 @@ export default function FilesScreen() {
 
   const confirmDelete = (node: FileNode) => {
     Alert.alert(
-      `Delete ${node.type === 'dir' ? 'folder' : 'file'}?`,
+      `Delete ${node.type === 'dir' ? 'Folder' : 'File'}?`,
       node.type === 'dir' ? `${node.path} and everything inside it will be deleted.` : node.path,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -130,15 +131,23 @@ export default function FilesScreen() {
         back
         right={<IconButton icon="add" label="Create file" onPress={() => setCreateVisible(true)} />}
       />
-      <View className="px-4 py-3">
-        <Input
-          placeholder="Search files…"
-          value={search}
-          onChangeText={setSearch}
-          autoCapitalize="none"
-          autoCorrect={false}
-          className="h-11"
-        />
+
+      {/* iOS Search Bar */}
+      <View className="px-4 py-2.5 border-b border-white/[0.06] bg-black">
+        <View className="relative flex-row items-center">
+          <Input
+            placeholder="Search files…"
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+            className="h-10 pl-9 text-sm rounded-xl border border-white/[0.08] bg-[#1C1C1E]"
+            containerClassName="flex-1"
+          />
+          <View className="pointer-events-none absolute left-3 top-3">
+            <Ionicons name="search" size={16} color="rgba(235, 235, 245, 0.40)" />
+          </View>
+        </View>
       </View>
 
       {treeQuery.isLoading ? (
@@ -152,6 +161,9 @@ export default function FilesScreen() {
         <FlatList
           data={rows}
           keyExtractor={({ node }) => node.path}
+          contentContainerClassName="pb-24"
+          showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
           renderItem={({ item: { node, depth } }) => (
             <FileTreeRow
               node={node}
@@ -173,13 +185,13 @@ export default function FilesScreen() {
           ListEmptyComponent={
             <EmptyState
               icon={search ? 'search-outline' : 'folder-open-outline'}
-              title={search ? 'No matching files' : 'No files synced yet'}
+              title={search ? 'No Matching Files' : 'No Files Synced Yet'}
               description={
                 search
-                  ? 'Try a different file name or path.'
+                  ? 'Try searching with a different name or path.'
                   : 'Run the PocketDev CLI sync agent, or create a file here.'
               }
-              actionLabel={!search ? 'Create file' : undefined}
+              actionLabel={!search ? 'Create File' : undefined}
               onAction={!search ? () => setCreateVisible(true) : undefined}
             />
           }

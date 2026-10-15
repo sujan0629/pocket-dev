@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import { AuthShell } from '@/components/auth/AuthShell';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { colors } from '@/constants/theme';
 import { saveApiUrl } from '@/services/apiSettings';
 import { useAuth } from '@/providers/AuthProvider';
 import { getErrorMessage } from '@/utils/errors';
@@ -54,7 +56,7 @@ export function ServerConfiguration() {
 
   return (
     <AuthShell
-      title="Connect your server"
+      title="Connect Server"
       subtitle="PocketDev talks directly to your NestJS API. You can change this endpoint at any time."
     >
       <View className="gap-4">
@@ -66,16 +68,19 @@ export function ServerConfiguration() {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
-          className="font-mono"
+          className="font-mono text-sm"
           hint="Use an HTTPS URL reachable from this phone. localhost points to the phone itself."
         />
         {error ? (
-          <AppText className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
-            {error}
-          </AppText>
+          <View className="flex-row items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#1C1C1E] px-4 py-3">
+            <Ionicons name="alert-circle" size={18} color={colors.danger} />
+            <AppText className="flex-1 text-xs text-[#FF453A] leading-4.5">
+              {error}
+            </AppText>
+          </View>
         ) : null}
         <Button
-          label="Save and test"
+          label="Save & Connect"
           icon="cloud-done-outline"
           size="lg"
           fullWidth

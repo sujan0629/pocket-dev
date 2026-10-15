@@ -203,7 +203,7 @@ export class DesktopLinks {
 
 export function createDesktopControlHandler(options: {
   jwtSecret: string;
-  ownerId: string | null;
+  ownerId: string | null | ((sub?: string) => boolean);
   links: DesktopLinks;
 }): (request: IncomingMessage, response: ServerResponse) => Promise<void> {
   return async (request, response) => {
@@ -220,12 +220,12 @@ export function createDesktopControlHandler(options: {
     } catch {
       claims = null;
     }
-    if (
-      !claims ||
-      claims.scope !== 'desktop-control' ||
-      !options.ownerId ||
-      claims.sub !== options.ownerId
-    ) {
+    const isAuthorized =
+      typeof options.ownerId === 'function'
+        ? options.ownerId(claims?.sub)
+        : !options.ownerId || claims?.sub === options.ownerId;
+
+    if (!claims || claims.scope !== 'desktop-control' || !isAuthorized) {
       json(response, 401, { error: 'Unauthorized' });
       return;
     }

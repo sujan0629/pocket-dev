@@ -1,8 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { jobsApi, projectsApi } from '@/api/pocketdev';
 import { ExplanationModal } from '@/components/assistant/ExplanationModal';
@@ -14,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
+import { colors } from '@/constants/theme';
 import { useTerminalSession, type TerminalPhase } from '@/hooks/useTerminalSession';
 
 function param(value: string | string[] | undefined): string {
@@ -24,7 +26,7 @@ const phaseLabel: Record<TerminalPhase, string> = {
   idle: 'Ready',
   creating: 'Creating',
   connecting: 'Connecting',
-  waiting: 'Waiting for worker',
+  waiting: 'Queued',
   ready: 'Live',
   stopping: 'Stopping',
   exited: 'Exited',
@@ -125,10 +127,10 @@ export default function TerminalScreen() {
       />
 
       {terminal.phase === 'idle' ? (
-        <View className="gap-4 px-5 py-5">
+        <View className="gap-5 px-4 py-5">
           <View>
-            <AppText variant="title">Run anything</AppText>
-            <AppText variant="caption" className="mt-1 leading-5">
+            <AppText variant="title">Run Command</AppText>
+            <AppText variant="caption" className="mt-1 leading-5 text-[rgba(235,235,245,0.60)]">
               Starts an interactive shell on your desktop or the cloud, runs this first command, and
               keeps the terminal open for the next command.
             </AppText>
@@ -139,24 +141,29 @@ export default function TerminalScreen() {
             onChangeText={setCommand}
             autoCapitalize="none"
             autoCorrect={false}
-            className="font-mono"
+            className="font-mono text-sm"
             returnKeyType="go"
             onSubmitEditing={() => void terminal.start(command)}
           />
-          <View className="flex-row flex-wrap gap-2">
-            {['npm run', 'npm test', 'git status', 'node --version'].map((preset) => (
-              <AppText
-                key={preset}
-                onPress={() => setCommand(preset)}
-                variant="mono"
-                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300"
-              >
-                {preset}
-              </AppText>
-            ))}
+          <View>
+            <AppText variant="label" className="mb-2 px-0.5 text-[11px]">Quick presets</AppText>
+            <View className="flex-row flex-wrap gap-2">
+              {['npm run', 'npm test', 'git status', 'node --version'].map((preset) => (
+                <Pressable
+                  key={preset}
+                  accessibilityRole="button"
+                  onPress={() => setCommand(preset)}
+                  className="rounded-full border border-white/[0.08] bg-[#1C1C1E] px-3.5 py-1.5 active:bg-[#2C2C2E]"
+                >
+                  <AppText variant="mono" className="text-xs text-[rgba(235,235,245,0.85)]">
+                    {preset}
+                  </AppText>
+                </Pressable>
+              ))}
+            </View>
           </View>
           <Button
-            label="Start session"
+            label="Start Session"
             icon="play"
             size="lg"
             fullWidth
@@ -166,19 +173,19 @@ export default function TerminalScreen() {
         </View>
       ) : (
         <>
-          <View className="flex-row items-center justify-between border-b border-slate-800 bg-slate-950 px-4 py-2">
+          <View className="flex-row items-center justify-between border-b border-white/[0.08] bg-[#1C1C1E] px-4 py-2.5">
             <View className="min-w-0 flex-1">
-              <AppText className="text-[11px] text-slate-500">Session starts in</AppText>
-              <AppText variant="mono" className="text-xs text-cyan-300" numberOfLines={2}>
+              <AppText className="text-[11px] font-medium text-[rgba(235,235,245,0.45)]">Workspace path</AppText>
+              <AppText variant="mono" className="text-xs text-[#64D2FF]" numberOfLines={1}>
                 {sessionDirectory ?? 'Resolving workspace…'}
               </AppText>
               {displayedJobStatus ? (
-                <AppText className="mt-0.5 text-[11px] text-slate-600">
+                <AppText className="mt-0.5 text-[11px] text-[rgba(235,235,245,0.45)]">
                   {displayedJobStatus} · {terminal.launch?.target} · last: {terminal.lastCommand}
                 </AppText>
               ) : null}
             </View>
-            <View className="flex-row gap-2">
+            <View className="flex-row items-center gap-2">
               {terminal.output.trim() ? (
                 <Button
                   label="Ask AI"
@@ -203,29 +210,31 @@ export default function TerminalScreen() {
           </View>
 
           {terminal.error ? (
-            <View className="border-b border-red-500/30 bg-red-500/10 px-4 py-3">
-              <AppText className="text-sm text-red-300">{terminal.error}</AppText>
+            <View className="flex-row items-center gap-2.5 border-b border-white/[0.08] bg-[#1C1C1E] px-4 py-3">
+              <Ionicons name="alert-circle" size={16} color={colors.danger} />
+              <AppText className="flex-1 text-xs text-[#FF453A]">{terminal.error}</AppText>
             </View>
           ) : null}
           {terminal.phase === 'waiting' ? (
-            <View className="border-b border-amber-500/20 bg-amber-500/10 px-4 py-3">
-              <AppText className="text-sm text-amber-200">
+            <View className="flex-row items-center gap-2.5 border-b border-white/[0.08] bg-[#1C1C1E] px-4 py-3">
+              <Ionicons name="time" size={16} color={colors.warning} />
+              <AppText className="flex-1 text-xs text-[rgba(235,235,245,0.75)]">
                 Waiting for a worker. Free-tier jobs share the queue; keep this screen open.
               </AppText>
             </View>
           ) : null}
           {terminal.exitCode !== null ? (
-            <View className="border-b border-slate-800 bg-slate-950 px-4 py-2">
+            <View className="border-b border-white/[0.08] bg-[#1C1C1E] px-4 py-2">
               <View className="flex-row items-center justify-between gap-3">
                 <AppText
                   className={
-                    terminal.exitCode === 0 ? 'text-sm text-green-300' : 'text-sm text-red-300'
+                    terminal.exitCode === 0 ? 'text-xs font-semibold text-[#30D158]' : 'text-xs font-semibold text-[#FF453A]'
                   }
                 >
                   Terminal exited with code {terminal.exitCode}
                 </AppText>
                 {terminal.exitCode !== 0 ? (
-                  <AppText variant="caption">Use Ask AI above for help.</AppText>
+                  <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.45)]">Use Ask AI for help</AppText>
                 ) : null}
               </View>
             </View>

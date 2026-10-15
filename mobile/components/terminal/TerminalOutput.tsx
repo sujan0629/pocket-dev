@@ -18,15 +18,18 @@ export const TerminalOutput = forwardRef<ScrollView, TerminalOutputProps>(functi
       className="flex-1 bg-black"
       contentContainerClassName="min-h-full p-4"
       keyboardShouldPersistTaps="handled"
+      alwaysBounceVertical={false}
+      showsVerticalScrollIndicator={true}
+      indicatorStyle="white"
       {...props}
     >
       {output ? (
-        <AppText selectable variant="mono" className="text-[13px] leading-5 text-slate-200">
+        <AppText selectable variant="mono" className="text-[13px] leading-5 text-white/95">
           {output}
         </AppText>
       ) : (
-        <View className="flex-1 items-center justify-center py-20">
-          <AppText variant="mono" className="text-center text-slate-600">
+        <View className="flex-1 items-center justify-center py-24">
+          <AppText variant="mono" className="text-center text-xs text-[rgba(235,235,245,0.40)]">
             {placeholder}
           </AppText>
         </View>

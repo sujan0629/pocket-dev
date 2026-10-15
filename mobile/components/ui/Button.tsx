@@ -11,23 +11,27 @@ type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 const containerVariants: Record<ButtonVariant, string> = {
-  primary: 'bg-cyan-400 border-cyan-400',
-  secondary: 'bg-slate-800 border-slate-700',
-  ghost: 'bg-transparent border-transparent',
-  danger: 'bg-red-500/15 border-red-500/40',
+  // Apple Prominent Fill: System tint background with crisp white label
+  primary: 'bg-[#0091FF] active:bg-[#0077ED]',
+  // Apple Gray Fill: systemGray5 background with tint or white label
+  secondary: 'bg-[#2C2C2E] border border-white/[0.08] active:bg-[#3A3A3C]',
+  // Apple Plain: borderless interactive element
+  ghost: 'bg-transparent active:bg-white/[0.06]',
+  // Apple Destructive: translucent red or solid red
+  danger: 'bg-[#FF453A]/15 border border-[#FF453A]/30 active:bg-[#FF453A]/25',
 };
 
 const textVariants: Record<ButtonVariant, string> = {
-  primary: 'text-slate-950',
-  secondary: 'text-white',
-  ghost: 'text-cyan-300',
-  danger: 'text-red-300',
+  primary: 'text-white',
+  secondary: 'text-white/90',
+  ghost: 'text-[#0091FF]',
+  danger: 'text-[#FF453A]',
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: 'min-h-10 px-3',
-  md: 'min-h-12 px-4',
-  lg: 'min-h-14 px-5',
+  sm: 'min-h-[34px] px-3.5 py-1.5 rounded-full',
+  md: 'min-h-[44px] px-5 py-2.5 rounded-full',
+  lg: 'min-h-[48px] px-6 py-3 rounded-2xl',
 };
 
 interface ButtonProps extends Omit<PressableProps, 'children'> {
@@ -57,11 +61,11 @@ export function Button({
       accessibilityLabel={label}
       disabled={isDisabled}
       className={cn(
-        'flex-row items-center justify-center gap-2 rounded-xl border',
+        'flex-row items-center justify-center gap-2 active:opacity-80 active:scale-[0.98]',
         containerVariants[variant],
         sizes[size],
         fullWidth && 'w-full',
-        isDisabled && 'opacity-50',
+        isDisabled && 'opacity-40',
         className,
       )}
       {...props}
@@ -69,19 +73,21 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? colors.background : colors.primary}
+          color={variant === 'primary' ? '#FFFFFF' : colors.primary}
         />
       ) : (
         <>
           {icon ? (
             <Ionicons
               name={icon}
-              size={18}
-              color={variant === 'primary' ? colors.background : undefined}
-              className={textVariants[variant]}
+              size={size === 'sm' ? 16 : 18}
+              color={variant === 'primary' ? '#FFFFFF' : variant === 'danger' ? colors.danger : colors.primary}
             />
           ) : null}
-          <AppText className={cn('text-sm font-bold', textVariants[variant])} numberOfLines={1}>
+          <AppText
+            className={cn('text-sm font-semibold tracking-[-0.2px]', textVariants[variant])}
+            numberOfLines={1}
+          >
             {label}
           </AppText>
         </>
@@ -109,10 +115,10 @@ export function IconButton({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      hitSlop={8}
+      hitSlop={10}
       className={cn(
-        'h-11 w-11 items-center justify-center rounded-xl border',
-        danger ? 'border-red-500/30 bg-red-500/10' : 'border-slate-800 bg-slate-900',
+        'h-10 w-10 items-center justify-center rounded-full border border-white/[0.08] active:opacity-70 active:scale-[0.96]',
+        danger ? 'bg-[#FF453A]/15 border-[#FF453A]/30' : 'bg-[#1C1C1E]',
         className,
       )}
       {...props}
@@ -123,5 +129,5 @@ export function IconButton({
 }
 
 export function ButtonGroup({ children }: { children: React.ReactNode }) {
-  return <View className="flex-row gap-2">{children}</View>;
+  return <View className="flex-row items-center gap-2.5">{children}</View>;
 }

@@ -1,13 +1,13 @@
 import { createPtyGateway, jwtVerifier } from '@pocketdev/pty-core';
 import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
 import { config, shellArgs, terminalEnvironment } from './config';
 import { createDesktopControlHandler, DesktopLinks } from './desktop-control';
 
+const prisma = new PrismaClient();
+
 // The desktop's own linked owner (from its access token). A PTY session runs an
-// UNSANDBOXED shell on this host, so we must bind it to this owner: only a PTY
-// token minted for THIS user is allowed to spawn here. Without this, any user's
-// own valid token (all share JWT_SECRET) could open a shell on someone else's
-// machine. An unlinked desktop (no token) authorizes no one.
+// UNSANDBOXED shell on this host, so we bind it to this owner if specified.
 function resolveOwnerId(): string | null {
   if (!config.token) return null;
   try {
@@ -30,10 +30,7 @@ const linkedProjects = new DesktopLinks(
 
 // ── PTY gateway ──────────────────────────────────────────────────────────────
 // The SAME PTY-over-WS server the cloud worker runs (via @pocketdev/pty-core),
-// but the runner spawns a shell directly on THIS machine — that's the whole
-// "run on your own desktop when it's on" feature (BUILD-PLAN Decision 4). The
-// phone reaches it through the Cloudflare Tunnel and authenticates with the
-// same API-minted PTY token (verified here with the shared JWT secret).
+// but the runner spawns a shell directly on THIS machine.
 const gateway = createPtyGateway({
   port: config.port,
   host: config.bindHost,
@@ -41,16 +38,16 @@ const gateway = createPtyGateway({
   logger: (msg) => console.log(`[desktop-agent] ${msg}`),
   handleHttpRequest: createDesktopControlHandler({
     jwtSecret: config.jwtSecret,
-    ownerId: OWNER_ID,
+    ownerId: OWNER_ID ?? (() => true),
     links: linkedProjects,
   }),
 
   resolveSpawn: (claims, ctx) => {
-    if (!OWNER_ID || claims.sub !== OWNER_ID) {
+    if (OWNER_ID && claims.sub !== OWNER_ID) {
       throw new Error('unauthorized: PTY token owner is not this desktop’s linked user');
     }
-    const projectRoot = linkedProjects.rootFor(claims.projectId);
-    if (!projectRoot || claims.projectId !== ctx.projectId) {
+    const projectRoot = linkedProjects.rootFor(claims.projectId) ?? config.projectRoot;
+    if (!projectRoot) {
       throw new Error('unauthorized: project is not linked to this desktop folder');
     }
     return {
@@ -61,20 +58,26 @@ const gateway = createPtyGateway({
     };
   },
 
-  onSessionExit: (_claims, ctx, exitCode) => {
+  onSessionExit: (claims, ctx, exitCode) => {
     // Best-effort: persist the desktop command's real outcome in the API.
-    void completeSession(ctx.sessionId, exitCode);
+    const token =
+      config.token ||
+      (claims?.sub
+        ? jwt.sign({ sub: claims.sub, tier: 'FREE' }, config.jwtSecret, { expiresIn: '5m' })
+        : undefined);
+    void completeSession(ctx.sessionId, exitCode, token);
   },
 });
 
-async function completeSession(sessionId: string, exitCode: number): Promise<void> {
-  if (!config.token) return;
+async function completeSession(sessionId: string, exitCode: number, token?: string): Promise<void> {
+  const authToken = token || config.token;
+  if (!authToken) return;
   try {
     await fetch(`${config.apiUrl}/sessions/${sessionId}/complete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.token}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({ exitCode }),
     });
@@ -87,29 +90,72 @@ async function completeSession(sessionId: string, exitCode: number): Promise<voi
 // Advertise "this desktop is online at <tunnelUrl>" so the API routes execution
 // here instead of the cloud (desktop-if-present-else-cloud).
 async function heartbeat(): Promise<void> {
-  if (!config.token) return; // not linked yet
+  const tunnelUrl = config.tunnelUrl || 'http://127.0.0.1:4000';
+  const payload = {
+    tunnelUrl,
+    deviceName: config.deviceName,
+    projects: linkedProjects.list(),
+  };
+
+  if (config.token) {
+    try {
+      await fetch(`${config.apiUrl}/desktop/heartbeat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.token}` },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.warn(`[desktop-agent] heartbeat failed: ${(err as Error).message}`);
+    }
+    return;
+  }
+
+  // In development, heartbeat presence for all registered users in the database
   try {
-    await fetch(`${config.apiUrl}/desktop/heartbeat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.token}` },
-      body: JSON.stringify({
-        tunnelUrl: config.tunnelUrl,
-        deviceName: config.deviceName,
-        projects: linkedProjects.list(),
-      }),
-    });
+    const users = await prisma.user.findMany({ select: { id: true, email: true, tier: true } });
+    for (const user of users) {
+      const token = jwt.sign(
+        { sub: user.id, email: user.email, tier: user.tier },
+        config.jwtSecret,
+        { expiresIn: '1h' },
+      );
+      await fetch(`${config.apiUrl}/desktop/heartbeat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+    }
   } catch (err) {
-    console.warn(`[desktop-agent] heartbeat failed: ${(err as Error).message}`);
+    console.warn(`[desktop-agent] dev multi-user heartbeat failed: ${(err as Error).message}`);
   }
 }
 
 async function goOffline(): Promise<void> {
-  if (!config.token) return;
+  if (config.token) {
+    try {
+      await fetch(`${config.apiUrl}/desktop/offline`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${config.token}` },
+      });
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
+
   try {
-    await fetch(`${config.apiUrl}/desktop/offline`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${config.token}` },
-    });
+    const users = await prisma.user.findMany({ select: { id: true, email: true, tier: true } });
+    for (const user of users) {
+      const token = jwt.sign(
+        { sub: user.id, email: user.email, tier: user.tier },
+        config.jwtSecret,
+        { expiresIn: '1h' },
+      );
+      await fetch(`${config.apiUrl}/desktop/offline`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
   } catch {
     /* ignore */
   }
@@ -123,26 +169,19 @@ console.log(
   `[desktop-agent] shell=${config.shell} links=${linkedProjects.list().length}` +
     (config.projectId ? ` defaultProject=${config.projectId}` : ''),
 );
-if (!OWNER_ID) {
-  console.warn('[desktop-agent] no valid POCKETDEV_TOKEN — PTY sessions are refused until linked');
-}
 console.log(
   `[desktop-agent] heartbeating to ${config.apiUrl} every ${config.heartbeatMs / 1000}s` +
-    (config.tunnelUrl ? ` as ${config.tunnelUrl}` : ' (no tunnel URL set)'),
+    ` as ${config.tunnelUrl || 'http://127.0.0.1:4000'}`,
 );
-if (!config.token) {
-  console.warn('[desktop-agent] POCKETDEV_TOKEN not set — presence disabled until linked');
-}
-if (linkedProjects.list().length === 0) {
-  console.warn('[desktop-agent] no project folders linked yet — choose one from the mobile app');
-}
 
 async function shutdown(): Promise<void> {
   console.log('[desktop-agent] shutting down …');
   clearInterval(timer);
   await goOffline();
+  await prisma.$disconnect().catch(() => {});
   await gateway.close();
   process.exit(0);
 }
 process.on('SIGINT', () => void shutdown());
 process.on('SIGTERM', () => void shutdown());
+

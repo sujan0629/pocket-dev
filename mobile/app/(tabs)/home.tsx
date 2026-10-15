@@ -41,7 +41,7 @@ export default function ProjectsScreen() {
       setCreateOpen(false);
       Toast.show({
         type: 'success',
-        text1: 'Project created',
+        text1: 'Project Created',
         text2: `${project.name} is ready to open.`,
       });
     },
@@ -69,8 +69,8 @@ export default function ProjectsScreen() {
       setNewOpen(false);
       Toast.show({
         type: 'success',
-        text1: 'Desktop project linked',
-        text2: `${project.name} now opens from ${project.desktopPath}.`,
+        text1: 'Desktop Linked',
+        text2: `${project.name} opened from ${project.desktopPath}.`,
       });
       router.push(`/projects/${encodeURIComponent(project.id)}` as Href);
     },
@@ -78,19 +78,26 @@ export default function ProjectsScreen() {
 
   const projects = projectsQuery.data ?? [];
   const projectCountLabel = projectsQuery.isSuccess
-    ? `${projects.length} ${projects.length === 1 ? 'project' : 'projects'}`
-    : 'Your mobile workspaces';
+    ? `${projects.length} ${projects.length === 1 ? 'workspace' : 'workspaces'}`
+    : 'Mobile workspaces';
 
   return (
     <Screen>
       <AppHeader
         title="Projects"
         subtitle={projectCountLabel}
-        right={<Button label="New" icon="add" size="sm" onPress={() => setNewOpen(true)} />}
+        right={
+          <Button
+            label="New"
+            icon="add"
+            size="sm"
+            onPress={() => setNewOpen(true)}
+          />
+        }
       />
 
       {projectsQuery.isLoading ? (
-        <LoadingState label="Loading projects…" />
+        <LoadingState label="Loading workspaces…" />
       ) : projectsQuery.isError && !projectsQuery.data ? (
         <ErrorState
           message={getErrorMessage(
@@ -104,8 +111,9 @@ export default function ProjectsScreen() {
           data={projects}
           keyExtractor={(project) => project.id}
           className="flex-1"
-          contentContainerClassName="grow px-5 pb-28 pt-5"
+          contentContainerClassName="grow px-4 pb-28 pt-4"
           showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
           refreshControl={
             <RefreshControl
               refreshing={projectsQuery.isRefetching}
@@ -117,10 +125,10 @@ export default function ProjectsScreen() {
           }
           ListHeaderComponent={
             projects.length > 0 ? (
-              <View className="mb-4">
-                <AppText variant="label">Recent workspaces</AppText>
-                <AppText variant="caption" className="mt-1 leading-5">
-                  Open a project to browse files, run commands, and manage Git.
+              <View className="mb-3.5 px-0.5">
+                <AppText variant="label">Active Workspaces</AppText>
+                <AppText variant="caption" className="mt-0.5 text-xs text-[rgba(235,235,245,0.50)]">
+                  Browse files, launch interactive terminals, and manage Git.
                 </AppText>
               </View>
             ) : null
@@ -136,9 +144,9 @@ export default function ProjectsScreen() {
             <View className="flex-1 justify-center">
               <EmptyState
                 icon="folder-open-outline"
-                title="Add your first project"
-                description="Link a folder from your connected desktop or create a blank workspace."
-                actionLabel="New project"
+                title="Add Your First Project"
+                description="Link a folder from your connected desktop or start with a blank cloud workspace."
+                actionLabel="New Project"
                 onAction={() => setNewOpen(true)}
               />
             </View>

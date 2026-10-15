@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 
 import { colors } from '@/constants/theme';
 
@@ -8,34 +9,45 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        sceneStyle: { backgroundColor: colors.background },
+        sceneStyle: { backgroundColor: '#000000' },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.subtle,
+        tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
-          marginTop: 2,
+          letterSpacing: -0.1,
+          marginTop: 1,
         },
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          height: 62,
-          paddingTop: 6,
+          backgroundColor: 'rgba(28, 28, 30, 0.94)',
+          borderTopColor: 'rgba(255, 255, 255, 0.12)',
+          borderTopWidth: 0.5,
+          elevation: 0,
+          height: Platform.OS === 'ios' ? 84 : 64,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 26 : 8,
         },
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ color, focused, size }) => {
+          // Apple HIG: Outline in toolbars/lists, filled in tab bars when active
           const iconMap = {
-            home: 'folder-open-outline',
-            explore: 'pulse-outline',
-            profile: 'settings-outline',
+            home: {
+              active: 'folder' as const,
+              inactive: 'folder-outline' as const,
+            },
+            explore: {
+              active: 'pulse' as const,
+              inactive: 'pulse-outline' as const,
+            },
+            profile: {
+              active: 'settings' as const,
+              inactive: 'settings-outline' as const,
+            },
           } as const;
 
-          return (
-            <Ionicons
-              name={iconMap[route.name as keyof typeof iconMap] ?? 'ellipse-outline'}
-              size={size}
-              color={color}
-            />
-          );
+          const icons = iconMap[route.name as keyof typeof iconMap];
+          const iconName = icons ? (focused ? icons.active : icons.inactive) : 'ellipse-outline';
+
+          return <Ionicons name={iconName} size={22} color={color} />;
         },
       })}
     >

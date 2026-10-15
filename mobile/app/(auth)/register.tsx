@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
@@ -8,6 +9,7 @@ import { AuthShell } from '@/components/auth/AuthShell';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { colors } from '@/constants/theme';
 import { useAuth } from '@/providers/AuthProvider';
 import { getErrorMessage } from '@/utils/errors';
 
@@ -48,7 +50,7 @@ export default function RegisterScreen() {
 
   return (
     <AuthShell
-      title="Create your workspace"
+      title="Create Account"
       subtitle="Start free. Connect the CLI, sync a project, and keep coding."
     >
       <View className="gap-4">
@@ -107,7 +109,7 @@ export default function RegisterScreen() {
           name="confirmPassword"
           render={({ field: { onBlur, onChange, value } }) => (
             <Input
-              label="Confirm password"
+              label="Confirm Password"
               placeholder="Repeat your password"
               secureTextEntry
               textContentType="newPassword"
@@ -121,12 +123,15 @@ export default function RegisterScreen() {
           )}
         />
         {errors.root?.message ? (
-          <AppText className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {errors.root.message}
-          </AppText>
+          <View className="flex-row items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#1C1C1E] px-4 py-3">
+            <Ionicons name="alert-circle" size={18} color={colors.danger} />
+            <AppText className="flex-1 text-xs text-[#FF453A] leading-4.5">
+              {errors.root.message}
+            </AppText>
+          </View>
         ) : null}
         <Button
-          label="Create account"
+          label="Create Account"
           icon="arrow-forward"
           size="lg"
           fullWidth
@@ -135,11 +140,11 @@ export default function RegisterScreen() {
         />
       </View>
 
-      <View className="mt-8 flex-row items-center justify-center gap-1">
+      <View className="mt-8 flex-row items-center justify-center gap-1.5">
         <AppText variant="caption">Already have an account?</AppText>
         <Link href="/(auth)/login" asChild>
-          <Pressable hitSlop={8}>
-            <AppText className="font-semibold text-cyan-300">Sign in</AppText>
+          <Pressable hitSlop={10} className="active:opacity-60">
+            <AppText className="font-semibold text-[#0091FF]">Sign in</AppText>
           </Pressable>
         </Link>
       </View>

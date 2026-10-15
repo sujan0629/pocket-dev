@@ -13,13 +13,13 @@ interface AuthShellProps extends PropsWithChildren {
 
 export function AuthShell({ title, subtitle, children }: AuthShellProps) {
   return (
-    <Screen scroll keyboard contentClassName="flex-grow justify-center py-10">
-      <View className="mb-10">
-        <View className="mb-6 h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10">
-          <Ionicons name="terminal" size={28} color={colors.primary} />
+    <Screen scroll keyboard contentClassName="flex-grow justify-center py-12 px-4">
+      <View className="mb-8">
+        <View className="mb-5 h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.08] bg-[#1C1C1E]">
+          <Ionicons name="terminal" size={26} color={colors.primary} />
         </View>
         <AppText variant="display">{title}</AppText>
-        <AppText variant="body" className="mt-2 leading-6 text-slate-400">
+        <AppText variant="body" className="mt-2 text-[15px] leading-5 text-[rgba(235,235,245,0.65)]">
           {subtitle}
         </AppText>
       </View>

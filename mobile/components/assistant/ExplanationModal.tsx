@@ -1,7 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { assistantApi } from '@/api/pocketdev';
+import { AppHeader } from '@/components/ui/AppHeader';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/constants/theme';
@@ -30,6 +33,7 @@ export function ExplanationModal({
   const [source, setSource] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!visible) return;
@@ -89,36 +93,45 @@ export function ExplanationModal({
   }, [command, exitCode, output, visible]);
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-[#070A0F]">
-        <View className="border-b border-slate-800 px-5 pb-4 pt-16">
-          <AppText variant="title">AI explanation</AppText>
-          <AppText variant="caption">{source ?? 'Analyzing terminal output'}</AppText>
-        </View>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View className="flex-1 bg-black">
+        <AppHeader
+          title="AI Explanation"
+          subtitle={source ?? 'Analyzing terminal output'}
+          right={<Button label="Done" size="sm" variant="ghost" onPress={onClose} />}
+        />
 
-        <ScrollView className="flex-1" contentContainerClassName="p-5">
+        <ScrollView className="flex-1" contentContainerClassName="px-4 py-4">
           {loading && !explanation ? (
-            <View className="items-center gap-3 py-14">
+            <View className="items-center gap-3 py-16">
               <ActivityIndicator color={colors.primary} />
-              <AppText variant="caption">Reading the terminal output…</AppText>
+              <AppText variant="caption" className="text-sm text-[rgba(235,235,245,0.60)]">
+                Analyzing terminal output…
+              </AppText>
             </View>
           ) : null}
           {error ? (
-            <AppText className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-300">
-              {error}
-            </AppText>
+            <View className="flex-row items-start gap-2.5 rounded-xl border border-white/[0.08] bg-[#1C1C1E] p-4">
+              <Ionicons name="alert-circle" size={18} color={colors.danger} />
+              <AppText className="flex-1 text-xs text-[#FF453A] leading-5">{error}</AppText>
+            </View>
           ) : null}
           {explanation ? (
-            <AppText selectable className="leading-7 text-slate-200">
-              {explanation}
-            </AppText>
+            <View className="rounded-2xl border border-white/[0.08] bg-[#1C1C1E] p-4.5">
+              <AppText selectable className="text-[15px] leading-6 text-white/90">
+                {explanation}
+              </AppText>
+            </View>
           ) : null}
           {loading && explanation ? (
             <ActivityIndicator className="mt-4 self-start" size="small" color={colors.primary} />
           ) : null}
         </ScrollView>
 
-        <View className="border-t border-slate-800 p-4">
+        <View
+          className="border-t border-white/[0.08] bg-[#1C1C1E] px-4 pt-3"
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
           <Button label="Close" variant="secondary" fullWidth onPress={onClose} />
         </View>
       </View>

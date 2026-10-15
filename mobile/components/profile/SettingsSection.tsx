@@ -12,15 +12,15 @@ interface SettingsSectionProps extends PropsWithChildren {
 export function SettingsSection({ title, description, children }: SettingsSectionProps) {
   return (
     <View>
-      <AppText variant="label" className="mb-2 px-1">
+      <AppText variant="label" className="mb-2 px-2 text-[12px]">
         {title}
       </AppText>
+      <Card className="overflow-hidden p-0 border border-white/[0.08] bg-[#1C1C1E]">{children}</Card>
       {description ? (
-        <AppText variant="caption" className="mb-3 px-1 leading-5">
+        <AppText variant="caption" className="mt-2 px-2 text-xs leading-4.5 text-[rgba(235,235,245,0.50)]">
           {description}
         </AppText>
       ) : null}
-      <Card className="overflow-hidden p-0">{children}</Card>
     </View>
   );
 }

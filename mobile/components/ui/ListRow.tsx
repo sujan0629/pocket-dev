@@ -32,25 +32,41 @@ export function ListRow({
       {icon ? (
         <View
           className={cn(
-            'h-10 w-10 items-center justify-center rounded-xl',
-            danger ? 'bg-red-500/10' : 'bg-slate-800',
+            'h-8 w-8 items-center justify-center rounded-[8px]',
+            danger ? 'bg-[#FF453A]/15' : 'bg-[#0091FF]/15',
           )}
         >
-          <Ionicons name={icon} size={20} color={danger ? colors.danger : colors.primary} />
+          <Ionicons
+            name={icon}
+            size={18}
+            color={danger ? colors.danger : colors.primary}
+          />
         </View>
       ) : null}
       <View className="min-w-0 flex-1">
-        <AppText className={cn('font-semibold', danger && 'text-red-300')} numberOfLines={1}>
+        <AppText
+          className={cn(
+            'text-[16px] font-normal tracking-[-0.2px] text-white',
+            danger && 'text-[#FF453A]',
+          )}
+          numberOfLines={1}
+        >
           {title}
         </AppText>
         {subtitle ? (
-          <AppText variant="caption" numberOfLines={2}>
+          <AppText variant="caption" className="mt-0.5 text-xs text-[rgba(235,235,245,0.60)]" numberOfLines={2}>
             {subtitle}
           </AppText>
         ) : null}
       </View>
       {right ??
-        (onPress ? <Ionicons name="chevron-forward" size={18} color={colors.subtle} /> : null)}
+        (onPress ? (
+          <Ionicons
+            name="chevron-forward"
+            size={17}
+            color="rgba(235, 235, 245, 0.30)"
+          />
+        ) : null)}
     </>
   );
 
@@ -59,7 +75,10 @@ export function ListRow({
       <Pressable
         accessibilityRole="button"
         onPress={onPress}
-        className={cn('flex-row items-center gap-3 px-4 py-3.5', className)}
+        className={cn(
+          'flex-row items-center gap-3.5 px-4 py-3 min-h-[48px] active:bg-white/[0.06]',
+          className,
+        )}
       >
         {content}
       </Pressable>
@@ -67,6 +86,8 @@ export function ListRow({
   }
 
   return (
-    <View className={cn('flex-row items-center gap-3 px-4 py-3.5', className)}>{content}</View>
+    <View className={cn('flex-row items-center gap-3.5 px-4 py-3 min-h-[48px]', className)}>
+      {content}
+    </View>
   );
 }

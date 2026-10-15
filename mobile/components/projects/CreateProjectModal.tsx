@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -8,6 +9,7 @@ import { z } from 'zod';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { colors } from '@/constants/theme';
 import { getErrorMessage } from '@/utils/errors';
 
 const createProjectSchema = z.object({
@@ -99,7 +101,7 @@ export function CreateProjectModal({ visible, onClose, onCreate }: CreateProject
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
-        <View className="flex-1 justify-end bg-black/75">
+        <View className="flex-1 justify-end bg-black/65">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Close new project form"
@@ -108,31 +110,32 @@ export function CreateProjectModal({ visible, onClose, onCreate }: CreateProject
           />
 
           <View
-            className="max-h-[90%] rounded-t-3xl border-t border-slate-700 bg-slate-950"
+            className="max-h-[90%] rounded-t-[28px] border-t border-white/[0.12] bg-[#1C1C1E] shadow-2xl"
             style={{ paddingBottom: Math.max(insets.bottom, 20) }}
           >
+            {/* Apple Sheet Grabber */}
             <View className="items-center pb-2 pt-3">
-              <View className="h-1 w-10 rounded-full bg-slate-700" />
+              <View className="h-1 w-9 rounded-full bg-white/20" />
             </View>
 
             <ScrollView
               className="px-5"
-              contentContainerClassName="pb-3"
+              contentContainerClassName="pb-4"
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
-              <AppText variant="title">New project</AppText>
-              <AppText variant="caption" className="mt-1 leading-5">
+              <AppText variant="title">New Project</AppText>
+              <AppText variant="caption" className="mt-1 leading-5 text-[rgba(235,235,245,0.60)]">
                 Create a workspace for files, terminal sessions, and Git.
               </AppText>
 
-              <View className="mt-6 gap-4">
+              <View className="mt-5 gap-4">
                 <Controller
                   control={control}
                   name="name"
                   render={({ field: { onBlur, onChange, value } }) => (
                     <Input
-                      label="Project name"
+                      label="Project Name"
                       placeholder="My awesome app"
                       autoCapitalize="words"
                       autoCorrect={false}
@@ -152,7 +155,7 @@ export function CreateProjectModal({ visible, onClose, onCreate }: CreateProject
                     <Input
                       label="Slug (optional)"
                       placeholder="my-awesome-app"
-                      hint="Leave blank to generate one from the project name."
+                      hint="Leave blank to generate one automatically."
                       autoCapitalize="none"
                       autoCorrect={false}
                       value={value}
@@ -183,9 +186,12 @@ export function CreateProjectModal({ visible, onClose, onCreate }: CreateProject
               </View>
 
               {errors.root?.message ? (
-                <AppText className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                  {errors.root.message}
-                </AppText>
+                <View className="mt-4 flex-row items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#2C2C2E] px-4 py-3">
+                  <Ionicons name="alert-circle" size={18} color={colors.danger} />
+                  <AppText className="flex-1 text-xs text-[#FF453A] leading-4.5">
+                    {errors.root.message}
+                  </AppText>
+                </View>
               ) : null}
 
               <View className="mt-6 flex-row gap-3">
@@ -197,7 +203,7 @@ export function CreateProjectModal({ visible, onClose, onCreate }: CreateProject
                   onPress={close}
                 />
                 <Button
-                  label="Create project"
+                  label="Create Project"
                   icon="add"
                   className="flex-1"
                   loading={isSubmitting}

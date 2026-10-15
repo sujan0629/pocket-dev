@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 import { desktopApi, projectsApi } from '@/api/pocketdev';
@@ -40,7 +40,7 @@ export default function ProjectWorkspaceScreen() {
     mutationFn: () => projectsApi.remove(projectId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
-      Toast.show({ type: 'success', text1: 'Project deleted' });
+      Toast.show({ type: 'success', text1: 'Project Deleted' });
       router.replace('/(tabs)/home');
     },
     onError: (error) =>
@@ -55,7 +55,7 @@ export default function ProjectWorkspaceScreen() {
 
   const confirmDelete = () => {
     Alert.alert(
-      'Delete project?',
+      'Delete Project?',
       'This removes the project record, its jobs, and sessions. Your original local folder is not deleted.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -72,7 +72,7 @@ export default function ProjectWorkspaceScreen() {
     return (
       <Screen>
         <AppHeader title="Workspace" back />
-        <LoadingState label="Opening project…" />
+        <LoadingState label="Opening workspace…" />
       </Screen>
     );
   }
@@ -90,110 +90,119 @@ export default function ProjectWorkspaceScreen() {
   }
 
   return (
-    <Screen scroll contentClassName="gap-5 pt-5">
-      <AppHeader title={project.name} subtitle="Project workspace" back />
-      <ProjectSummary project={project} desktop={desktopQuery.data} />
+    <Screen>
+      <AppHeader title={project.name} subtitle="Workspace" back />
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="gap-5 px-4 pb-24 pt-4"
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
+      >
+        <ProjectSummary project={project} desktop={desktopQuery.data} />
 
-      <View>
-        <AppText variant="label" className="mb-3">
-          Workspace
-        </AppText>
-        <View className="flex-row gap-3">
-          <WorkspaceAction
-            icon="folder-open-outline"
-            title="Files"
-            description="Browse and edit"
+        <View>
+          <AppText variant="label" className="mb-2.5 px-0.5">
+            Workspace Tools
+          </AppText>
+          <View className="flex-row gap-3">
+            <WorkspaceAction
+              icon="folder-open-outline"
+              title="Files"
+              description="Browse and edit files"
+              onPress={() =>
+                router.push({
+                  pathname: '/projects/[projectId]/files',
+                  params: { projectId },
+                })
+              }
+            />
+            <WorkspaceAction
+              icon="git-branch-outline"
+              title="Git"
+              description="Commit, push & diff"
+              onPress={() =>
+                router.push({
+                  pathname: '/projects/[projectId]/git',
+                  params: { projectId },
+                })
+              }
+            />
+          </View>
+        </View>
+
+        <Card className="gap-2">
+          <AppText variant="heading">Run Command</AppText>
+          <AppText variant="caption" className="text-xs leading-4.5 text-[rgba(235,235,245,0.60)]">
+            Starts an interactive shell, executes the initial command, and keeps the terminal live for more.
+          </AppText>
+          <Input
+            label="Initial Command"
+            value={command}
+            onChangeText={setCommand}
+            autoCapitalize="none"
+            autoCorrect={false}
+            className="font-mono text-sm"
+            containerClassName="mt-3"
+            returnKeyType="go"
+            onSubmitEditing={() => {
+              if (!command.trim()) return;
+              router.push({
+                pathname: '/projects/[projectId]/terminal',
+                params: { projectId, command: command.trim(), autorun: '1' },
+              });
+            }}
+          />
+          <Button
+            label="Open Terminal"
+            icon="terminal-outline"
+            fullWidth
+            className="mt-3.5"
+            disabled={!command.trim()}
             onPress={() =>
               router.push({
-                pathname: '/projects/[projectId]/files',
-                params: { projectId },
+                pathname: '/projects/[projectId]/terminal',
+                params: { projectId, command: command.trim() },
               })
             }
           />
-          <WorkspaceAction
-            icon="git-branch-outline"
-            title="Git"
-            description="Commit and push"
-            onPress={() =>
-              router.push({
-                pathname: '/projects/[projectId]/git',
-                params: { projectId },
-              })
-            }
+        </Card>
+
+        <Card className="gap-2.5">
+          <AppText variant="heading" className="text-[17px]">Project Details</AppText>
+          <View className="mt-1.5 flex-row justify-between items-center gap-4 border-b border-white/[0.05] pb-2.5">
+            <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.55)]">Created</AppText>
+            <AppText className="text-xs text-[rgba(235,235,245,0.85)]">
+              {new Date(project.createdAt).toLocaleDateString()}
+            </AppText>
+          </View>
+          <View className="flex-row justify-between items-center gap-4 border-b border-white/[0.05] pb-2.5">
+            <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.55)]">Project ID</AppText>
+            <AppText variant="mono" className="max-w-[65%] text-xs text-[rgba(235,235,245,0.50)]" numberOfLines={1}>
+              {project.id}
+            </AppText>
+          </View>
+          <View className="flex-row justify-between items-center gap-4">
+            <AppText variant="caption" className="text-xs text-[rgba(235,235,245,0.55)]">Desktop Link</AppText>
+            <AppText
+              variant="mono"
+              className="max-w-[65%] text-right text-xs text-[#64D2FF]"
+              numberOfLines={2}
+            >
+              {project.desktopPath ?? 'Not linked'}
+            </AppText>
+          </View>
+        </Card>
+
+        <View className="pt-2">
+          <Button
+            label="Delete Project"
+            variant="danger"
+            icon="trash-outline"
+            loading={removeMutation.isPending}
+            onPress={confirmDelete}
           />
         </View>
-      </View>
-
-      <Card>
-        <AppText variant="heading">Run a command</AppText>
-        <AppText variant="caption" className="mt-1 leading-5">
-          Starts a persistent interactive shell, runs this first command, and stays open for more.
-        </AppText>
-        <Input
-          label="Command"
-          value={command}
-          onChangeText={setCommand}
-          autoCapitalize="none"
-          autoCorrect={false}
-          className="font-mono"
-          containerClassName="mt-4"
-          returnKeyType="go"
-          onSubmitEditing={() => {
-            if (!command.trim()) return;
-            router.push({
-              pathname: '/projects/[projectId]/terminal',
-              params: { projectId, command: command.trim(), autorun: '1' },
-            });
-          }}
-        />
-        <Button
-          label="Open terminal"
-          icon="terminal-outline"
-          fullWidth
-          className="mt-4"
-          disabled={!command.trim()}
-          onPress={() =>
-            router.push({
-              pathname: '/projects/[projectId]/terminal',
-              params: { projectId, command: command.trim() },
-            })
-          }
-        />
-      </Card>
-
-      <Card className="gap-1">
-        <AppText variant="heading">Project details</AppText>
-        <View className="mt-3 flex-row justify-between gap-4">
-          <AppText variant="caption">Created</AppText>
-          <AppText className="text-sm text-slate-300">
-            {new Date(project.createdAt).toLocaleDateString()}
-          </AppText>
-        </View>
-        <View className="mt-2 flex-row justify-between gap-4">
-          <AppText variant="caption">Project ID</AppText>
-          <AppText variant="mono" className="max-w-[65%] text-xs text-slate-400" numberOfLines={1}>
-            {project.id}
-          </AppText>
-        </View>
-        <View className="mt-2 flex-row justify-between gap-4">
-          <AppText variant="caption">Desktop link</AppText>
-          <AppText
-            variant="mono"
-            className="max-w-[65%] text-right text-xs text-slate-400"
-            numberOfLines={2}
-          >
-            {project.desktopPath ?? 'Not linked'}
-          </AppText>
-        </View>
-      </Card>
-
-      <Button
-        label="Delete project"
-        variant="danger"
-        icon="trash-outline"
-        loading={removeMutation.isPending}
-        onPress={confirmDelete}
-      />
+      </ScrollView>
     </Screen>
   );
 }

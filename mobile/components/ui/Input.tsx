@@ -17,25 +17,25 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   ref,
 ) {
   return (
-    <View className={cn('gap-2', containerClassName)}>
-      {label ? <AppText variant="label">{label}</AppText> : null}
+    <View className={cn('gap-1.5', containerClassName)}>
+      {label ? <AppText variant="label" className="px-0.5">{label}</AppText> : null}
       <TextInput
         ref={ref}
         placeholderTextColor={colors.subtle}
         selectionColor={colors.primary}
         multiline={multiline}
         className={cn(
-          'rounded-xl border border-slate-700 bg-slate-900 px-4 text-base text-white',
-          multiline ? 'min-h-28 py-3' : 'h-12',
-          error && 'border-red-500',
+          'rounded-xl border border-white/[0.10] bg-[#1C1C1E] px-4 text-[16px] text-white',
+          multiline ? 'min-h-[110px] py-3.5' : 'h-12',
+          error && 'border-[#FF453A]',
           className,
         )}
         {...props}
       />
       {error ? (
-        <AppText className="text-sm text-red-400">{error}</AppText>
+        <AppText className="px-0.5 text-xs text-[#FF453A]">{error}</AppText>
       ) : hint ? (
-        <AppText variant="caption">{hint}</AppText>
+        <AppText variant="caption" className="px-0.5 text-xs text-[rgba(235,235,245,0.50)]">{hint}</AppText>
       ) : null}
     </View>
   );

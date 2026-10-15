@@ -14,8 +14,8 @@ export default function Index() {
   }
 
   return (
-    <View className="flex-1 items-center justify-center bg-[#070A0F]">
-      <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/30 bg-cyan-500/10">
+    <View className="flex-1 items-center justify-center bg-black">
+      <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl border border-[#0091FF]/25 bg-[#0091FF]/15">
         <Ionicons name="terminal" size={30} color={colors.primary} />
       </View>
       <AppText variant="title">PocketDev</AppText>

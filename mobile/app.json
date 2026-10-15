@@ -26,7 +26,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single"
     },
     "plugins": [
       "expo-router",
@@ -57,7 +57,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#070A0F",
+          "backgroundColor": "#000000",
           "image": "./assets/images/pocketdev-icon.png",
           "imageWidth": 180,
           "resizeMode": "contain"

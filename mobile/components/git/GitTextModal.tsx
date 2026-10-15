@@ -44,7 +44,7 @@ export function GitTextModal({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <View className="flex-1 justify-end bg-black/70">
+        <View className="flex-1 justify-end bg-black/65">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Close ${title}`}
@@ -52,22 +52,23 @@ export function GitTextModal({
             onPress={onClose}
           />
           <View
-            className="max-h-[90%] min-h-[45%] rounded-t-3xl border-t border-slate-700 bg-slate-950"
+            className="max-h-[90%] min-h-[45%] rounded-t-[28px] border-t border-white/[0.12] bg-[#1C1C1E] shadow-2xl"
             style={{ paddingBottom: Math.max(insets.bottom, 16) }}
           >
+            {/* Apple Sheet Grabber */}
             <View className="items-center pb-2 pt-3">
-              <View className="h-1 w-10 rounded-full bg-slate-700" />
+              <View className="h-1 w-9 rounded-full bg-white/20" />
             </View>
             <ScrollView
               className="px-5"
-              contentContainerClassName="pb-3"
+              contentContainerClassName="pb-4"
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="interactive"
               showsVerticalScrollIndicator={false}
             >
               <AppText variant="title">{title}</AppText>
               {description ? (
-                <AppText variant="caption" className="mt-1 leading-5">
+                <AppText variant="caption" className="mt-1 text-xs leading-5 text-[rgba(235,235,245,0.60)]">
                   {description}
                 </AppText>
               ) : null}
@@ -84,7 +85,7 @@ export function GitTextModal({
                 containerClassName="mt-5"
                 autoFocus
               />
-              <View className="mt-5 flex-row gap-3">
+              <View className="mt-6 flex-row gap-3">
                 <Button
                   label="Cancel"
                   variant="secondary"

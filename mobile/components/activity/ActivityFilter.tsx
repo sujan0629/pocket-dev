@@ -30,7 +30,7 @@ export function ActivityFilter({
 }) {
   return (
     <View>
-      <AppText variant="label" className="mb-3">
+      <AppText variant="label" className="mb-2.5 px-0.5">
         Filter by status
       </AppText>
       <View className="flex-row flex-wrap gap-2">
@@ -49,28 +49,30 @@ export function ActivityFilter({
               accessibilityLabel={`${filter.label}, ${count} jobs`}
               onPress={() => onChange(filter.value)}
               className={cn(
-                'flex-row items-center gap-1.5 rounded-full border px-3 py-2',
-                selected ? 'border-cyan-400 bg-cyan-400' : 'border-slate-700 bg-slate-900',
+                'flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 active:opacity-80 active:scale-[0.98]',
+                selected
+                  ? 'border-[#0091FF] bg-[#0091FF]'
+                  : 'border-white/[0.08] bg-[#1C1C1E]',
               )}
             >
               <AppText
                 className={cn(
-                  'text-sm font-semibold',
-                  selected ? 'text-slate-950' : 'text-slate-300',
+                  'text-xs font-semibold',
+                  selected ? 'text-white' : 'text-[rgba(235,235,245,0.70)]',
                 )}
               >
                 {filter.label}
               </AppText>
               <View
                 className={cn(
-                  'min-w-5 items-center rounded-full px-1.5 py-0.5',
-                  selected ? 'bg-slate-950/15' : 'bg-slate-800',
+                  'min-w-4 items-center rounded-full px-1.5 py-0.2',
+                  selected ? 'bg-white/25' : 'bg-white/[0.08]',
                 )}
               >
                 <AppText
                   className={cn(
-                    'text-[11px] font-bold',
-                    selected ? 'text-slate-950' : 'text-slate-400',
+                    'text-[10px] font-bold',
+                    selected ? 'text-white' : 'text-[rgba(235,235,245,0.45)]',
                   )}
                 >
                   {count}

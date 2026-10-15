@@ -1,6 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 
 import { jobsApi, projectsApi, sessionsApi } from '@/api/pocketdev';
 import { ActivityFilter, type ActivityFilterValue } from '@/components/activity/ActivityFilter';
@@ -10,6 +11,7 @@ import { AppHeader } from '@/components/ui/AppHeader';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/StateView';
+import { colors } from '@/constants/theme';
 import type { Project, Session } from '@/types/api';
 import { getErrorMessage } from '@/utils/errors';
 
@@ -75,7 +77,7 @@ export default function ActivityScreen() {
     return (
       <Screen>
         <AppHeader title="Activity" subtitle="Command history" />
-        <LoadingState label="Loading activity..." />
+        <LoadingState label="Loading activity…" />
       </Screen>
     );
   }
@@ -104,27 +106,36 @@ export default function ActivityScreen() {
       <FlatList
         data={visibleJobs}
         keyExtractor={(job) => job.id}
-        contentContainerClassName="px-5 pb-10"
+        contentContainerClassName="px-4 pb-28"
         showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={() => void refresh()}
+        alwaysBounceVertical={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void refresh()}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            progressBackgroundColor={colors.elevated}
+          />
+        }
         ItemSeparatorComponent={() => <View className="h-3" />}
         ListHeaderComponent={
-          <View className="gap-5 pb-4 pt-5">
+          <View className="gap-4 pb-3.5 pt-4">
             <ActivitySummary jobs={jobs} sessions={sessions} />
             <ActivityFilter jobs={jobs} value={filter} onChange={setFilter} />
             {detailError ? (
-              <View className="flex-row items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
-                <AppText className="min-w-0 flex-1 text-sm text-amber-200">
+              <View className="flex-row items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#1C1C1E] px-3.5 py-3">
+                <Ionicons name="warning" size={16} color={colors.warning} />
+                <AppText className="min-w-0 flex-1 text-xs text-[rgba(235,235,245,0.75)]">
                   Some project or session details are unavailable.
                 </AppText>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Retry loading activity details"
-                  hitSlop={8}
+                  hitSlop={10}
                   onPress={() => void refresh()}
                 >
-                  <AppText className="text-sm font-semibold text-amber-100">Retry</AppText>
+                  <AppText className="text-xs font-semibold text-[#0091FF]">Retry</AppText>
                 </Pressable>
               </View>
             ) : null}
@@ -134,13 +145,13 @@ export default function ActivityScreen() {
           jobs.length === 0 ? (
             <EmptyState
               icon="pulse-outline"
-              title="No activity yet"
+              title="No Activity Yet"
               description="Run a command from a project workspace and it will appear here."
             />
           ) : (
             <EmptyState
-              icon="filter-outline"
-              title="No matching jobs"
+              icon="funnel-outline"
+              title="No Matching Jobs"
               description="Choose another status to see the rest of your command history."
             />
           )

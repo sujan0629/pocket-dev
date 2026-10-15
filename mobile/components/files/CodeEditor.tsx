@@ -20,7 +20,7 @@ export const CodeEditor = forwardRef<TextInput, TextInputProps>(function CodeEdi
       selectionColor={colors.primary}
       placeholderTextColor={colors.subtle}
       className={cn(
-        'flex-1 bg-[#070A0F] px-4 py-4 font-mono text-[14px] leading-6 text-slate-200',
+        'flex-1 bg-black px-4 py-4 font-mono text-[14px] leading-[22px] text-white/95',
         className,
       )}
       {...props}

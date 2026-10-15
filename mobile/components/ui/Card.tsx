@@ -10,7 +10,10 @@ interface CardProps extends PropsWithChildren<ViewProps> {
 export function Card({ className, ...props }: CardProps) {
   return (
     <View
-      className={cn('rounded-2xl border border-slate-800 bg-slate-900 p-4', className)}
+      className={cn(
+        'rounded-2xl border border-white/[0.08] bg-[#1C1C1E] p-4 shadow-sm',
+        className,
+      )}
       {...props}
     />
   );

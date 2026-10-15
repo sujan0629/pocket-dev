@@ -10,9 +10,11 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 
 export function LoadingState({ label = 'Loading…' }: { label?: string }) {
   return (
-    <View className="flex-1 items-center justify-center gap-3 px-8 py-12">
-      <ActivityIndicator color={colors.primary} />
-      <AppText variant="caption">{label}</AppText>
+    <View className="flex-1 items-center justify-center gap-3 px-8 py-16">
+      <ActivityIndicator size="small" color={colors.primary} />
+      <AppText variant="caption" className="text-sm text-[rgba(235,235,245,0.60)]">
+        {label}
+      </AppText>
     </View>
   );
 }
@@ -31,14 +33,17 @@ export function EmptyState({
   onAction?: () => void;
 }) {
   return (
-    <View className="items-center justify-center px-8 py-14">
-      <View className="mb-4 h-14 w-14 items-center justify-center rounded-2xl bg-slate-900">
-        <Ionicons name={icon} size={26} color={colors.primary} />
+    <View className="items-center justify-center px-8 py-16">
+      <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-[#1C1C1E] border border-white/[0.08]">
+        <Ionicons name={icon} size={30} color={colors.muted} />
       </View>
-      <AppText variant="heading" className="text-center">
+      <AppText variant="heading" className="text-center font-semibold text-white">
         {title}
       </AppText>
-      <AppText variant="caption" className="mt-2 text-center leading-5">
+      <AppText
+        variant="caption"
+        className="mt-1.5 max-w-[280px] text-center text-sm leading-5 text-[rgba(235,235,245,0.60)]"
+      >
         {description}
       </AppText>
       {actionLabel && onAction ? (
@@ -47,7 +52,7 @@ export function EmptyState({
           variant="secondary"
           size="sm"
           onPress={onAction}
-          className="mt-5"
+          className="mt-6"
         />
       ) : null}
     </View>
@@ -58,9 +63,9 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   return (
     <EmptyState
       icon="warning-outline"
-      title="Couldn’t load this"
+      title="Unable to Load"
       description={message}
-      actionLabel={onRetry ? 'Try again' : undefined}
+      actionLabel={onRetry ? 'Try Again' : undefined}
       onAction={onRetry}
     />
   );

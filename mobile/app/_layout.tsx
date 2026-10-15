@@ -35,8 +35,8 @@ function AppNavigator() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#070A0F' },
-          animation: 'slide_from_right',
+          contentStyle: { backgroundColor: '#000000' },
+          animation: 'default',
         }}
       >
         <Stack.Screen name="index" options={{ animation: 'fade' }} />
@@ -60,7 +60,7 @@ function AppNavigator() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
       <KeyboardProvider>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>

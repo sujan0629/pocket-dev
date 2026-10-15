@@ -49,7 +49,7 @@ export function ProfileSettingRow({
       subtitle={description}
       danger={danger}
       onPress={canPress ? onPress : undefined}
-      className={cn(!last && 'border-b border-slate-800/80', disabled && 'opacity-60')}
+      className={cn(!last && 'border-b border-white/[0.06]', disabled && 'opacity-50')}
       right={
         <View className="ml-2 flex-row items-center gap-2">
           {loading ? (
@@ -59,13 +59,13 @@ export function ProfileSettingRow({
           ) : value ? (
             <AppText
               variant="caption"
-              className="max-w-32 text-right text-slate-300"
+              className="max-w-32 text-right text-xs text-[rgba(235,235,245,0.60)]"
               numberOfLines={1}
             >
               {value}
             </AppText>
           ) : null}
-          {canPress ? <Ionicons name="chevron-forward" size={17} color={colors.subtle} /> : null}
+          {canPress ? <Ionicons name="chevron-forward" size={16} color="rgba(235, 235, 245, 0.30)" /> : null}
         </View>
       }
     />

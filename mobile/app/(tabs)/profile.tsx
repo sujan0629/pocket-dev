@@ -287,8 +287,9 @@ export default function ProfileScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-6 px-5 pb-12 pt-5"
+        contentContainerClassName="gap-5 px-4 pb-28 pt-4"
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical={true}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -419,15 +420,15 @@ export default function ProfileScreen() {
           />
         </SettingsSection>
 
-        <View>
+        <View className="pt-1">
           <Button
-            label="Sign out"
+            label="Sign Out"
             icon="log-out-outline"
             variant="danger"
             fullWidth
             onPress={confirmLogout}
           />
-          <AppText variant="caption" className="mt-3 text-center text-xs leading-5">
+          <AppText variant="caption" className="mt-2.5 text-center text-xs text-[rgba(235,235,245,0.45)] leading-4">
             Signing out removes only this device&apos;s secure session.
           </AppText>
         </View>

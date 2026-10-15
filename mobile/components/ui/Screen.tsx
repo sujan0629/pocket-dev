@@ -34,9 +34,10 @@ export function Screen({
   const content = scroll ? (
     <ScrollView
       className={cn('flex-1', className)}
-      contentContainerClassName={cn('px-5 pb-10', contentClassName)}
+      contentContainerClassName={cn('px-4 pb-12 pt-2', contentClassName)}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
+      alwaysBounceVertical={true}
       {...scrollProps}
     >
       {children}
@@ -48,7 +49,7 @@ export function Screen({
   );
 
   return (
-    <SafeAreaView edges={edges} className="flex-1 bg-[#070A0F]">
+    <SafeAreaView edges={edges} className="flex-1 bg-black">
       {keyboard ? (
         <KeyboardAvoidingView
           className="flex-1"

@@ -10,43 +10,51 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Brand accent: cyan/teal — technical, infra-tool feel (Netlify/Supabase
-        // family), pairs with a near-black base + monospace, and stays distinct
-        // from the semantic status greens/ambers/reds below. Swap freely.
+        // Apple HIG System Tint (Dark Mode)
         primary: {
-          DEFAULT: '#22D3EE',
-          light: '#67E8F9',
-          dark: '#0E7490',
+          DEFAULT: '#0091FF',
+          light: '#3CD3FE',
+          dark: '#0077ED',
         },
-        // Secondary = a calm slate for secondary buttons/borders on dark.
-        secondary: {
-          DEFAULT: '#64748B',
-          light: '#94A3B8',
-          dark: '#475569',
+        // Apple Semantic Accents
+        apple: {
+          blue: '#0091FF',
+          cyan: '#3CD3FE',
+          teal: '#00D2E0',
+          green: '#30D158',
+          orange: '#FF9F0A',
+          red: '#FF453A',
+          purple: '#BF5AF2',
+          gray: '#8E8E93',
+          gray2: '#636366',
+          gray3: '#48484A',
+          gray4: '#3A3A3C',
+          gray5: '#2C2C2E',
+          gray6: '#1C1C1E',
         },
-        // Semantic status — wire StatusChip / online dots / exit codes to these.
-        success: { DEFAULT: '#22C55E', light: '#4ADE80', dark: '#15803D' }, // running / online / exit 0
-        warning: { DEFAULT: '#F59E0B', light: '#FBBF24', dark: '#B45309' }, // queued / dirty
-        danger: { DEFAULT: '#EF4444', light: '#F87171', dark: '#B91C1C' }, // failed / exit != 0
-        info: { DEFAULT: '#3B82F6', light: '#60A5FA', dark: '#1D4ED8' },
-        neutral: {
-          50: '#FAFAFA',
-          100: '#F5F5F5',
-          200: '#E5E5E5',
-          300: '#D4D4D4',
-          400: '#A3A3A3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
-        },
-        // Dark-first surfaces (near-black, GitHub-dark family) + an elevated layer.
+        // Semantic status
+        success: { DEFAULT: '#30D158', light: '#34C759', dark: '#248A3D' },
+        warning: { DEFAULT: '#FF9F0A', light: '#FFD60A', dark: '#C97800' },
+        danger: { DEFAULT: '#FF453A', light: '#FF6961', dark: '#D70015' },
+        info: { DEFAULT: '#64D2FF', light: '#70D7FF', dark: '#0071A4' },
+        // Apple Dark Mode System Surfaces
         surface: {
-          DEFAULT: '#FFFFFF',
-          dark: '#0D1117',
-          elevated: '#161B22',
+          DEFAULT: '#1C1C1E',
+          base: '#000000',
+          dark: '#000000',
+          secondary: '#1C1C1E',
+          elevated: '#2C2C2E',
+          quaternary: '#3A3A3C',
         },
+        // Apple Label Hierarchy
+        label: {
+          DEFAULT: '#FFFFFF',
+          primary: '#FFFFFF',
+          secondary: 'rgba(235, 235, 245, 0.60)',
+          tertiary: 'rgba(235, 235, 245, 0.35)',
+          quaternary: 'rgba(235, 235, 245, 0.18)',
+        },
+        separator: 'rgba(84, 84, 88, 0.55)',
       },
       borderRadius: {
         xs: '4px',
@@ -55,7 +63,8 @@ module.exports = {
         lg: '16px',
         xl: '20px',
         '2xl': '24px',
-        '3xl': '32px',
+        '3xl': '28px',
+        pill: '9999px',
       },
       zIndex: {
         base: '0',

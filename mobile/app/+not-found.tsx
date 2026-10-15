@@ -10,12 +10,12 @@ export default function NotFoundScreen() {
     <Screen contentClassName="items-center justify-center px-5">
       <EmptyState
         icon="map-outline"
-        title="Page not found"
+        title="Page Not Found"
         description="This route doesn’t exist or may have moved."
       />
       <Link href="/" asChild>
-        <Pressable className="rounded-xl bg-cyan-400 px-5 py-3">
-          <AppText className="font-bold text-slate-950">Go home</AppText>
+        <Pressable className="rounded-full bg-[#0091FF] px-6 py-3 active:opacity-80 active:scale-[0.98]">
+          <AppText className="text-sm font-semibold text-white">Go Home</AppText>
         </Pressable>
       </Link>
     </Screen>

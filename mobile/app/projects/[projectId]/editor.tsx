@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useMemo, useState } from 'react';
-import { Alert, Keyboard, View } from 'react-native';
+import { Alert, Keyboard, Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 import { filesApi } from '@/api/pocketdev';
@@ -34,6 +35,7 @@ function EditorWorkspace({
 }) {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState(file.content);
   const isDirty = draft !== file.content;
   const stats = useMemo(
@@ -66,8 +68,8 @@ function EditorWorkspace({
 
   usePreventRemove(isDirty, ({ data }) => {
     Keyboard.dismiss();
-    Alert.alert('Discard unsaved changes?', 'Your changes have not been saved.', [
-      { text: 'Keep editing', style: 'cancel' },
+    Alert.alert('Discard Unsaved Changes?', 'Your modifications have not been saved.', [
+      { text: 'Keep Editing', style: 'cancel' },
       {
         text: 'Discard',
         style: 'destructive',
@@ -89,13 +91,13 @@ function EditorWorkspace({
         back
         onBack={goBack}
         right={
-          <View className="flex-row gap-2">
+          <View className="flex-row items-center gap-2">
             <IconButton
               icon="copy-outline"
               label="Copy file"
               onPress={() => {
                 void Clipboard.setStringAsync(draft);
-                Toast.show({ type: 'info', text1: 'Copied to clipboard' });
+                Toast.show({ type: 'info', text1: 'Copied to Clipboard' });
               }}
             />
             <IconButton
@@ -107,31 +109,43 @@ function EditorWorkspace({
           </View>
         }
       />
-      <View className="flex-row items-center justify-between border-b border-slate-900 bg-slate-950 px-4 py-2">
-        <AppText variant="mono" className={isDirty ? 'text-amber-300' : 'text-green-300'}>
+
+      <View className="flex-row items-center justify-between border-b border-white/[0.08] bg-[#1C1C1E] px-4 py-2">
+        <AppText variant="mono" className={isDirty ? 'text-xs text-[#FF9F0A]' : 'text-xs text-[#30D158]'}>
           {isDirty ? '● Modified' : '✓ Saved'}
         </AppText>
-        <AppText className="text-xs text-slate-500">
+        <AppText className="text-xs text-[rgba(235,235,245,0.50)]">
           {stats.lines} lines · {formatBytes(stats.bytes)}
         </AppText>
       </View>
+
       <CodeEditor value={draft} onChangeText={setDraft} />
-      <View className="flex-row items-center gap-2 border-t border-slate-800 bg-slate-950 px-3 py-2">
+
+      {/* iOS Keyboard Accessory Bar */}
+      <View
+        className="flex-row items-center gap-1.5 border-t border-white/[0.08] bg-[#1C1C1E] px-3 py-2"
+        style={{ paddingBottom: Math.max(insets.bottom, 8) }}
+      >
         {['  ', '\t', '{', '}', '(', ')', '[', ']', ';'].map((key, index) => (
-          <AppText
+          <Pressable
             key={`${key}-${index}`}
             onPress={() => setDraft((value) => value + key)}
-            className="min-w-9 rounded-lg bg-slate-800 px-2 py-2 text-center font-mono text-sm text-slate-200"
+            className="h-8 min-w-[34px] items-center justify-center rounded-lg border border-white/[0.08] bg-[#2C2C2E] px-2 active:bg-[#3A3A3C]"
           >
-            {key === '  ' ? '⇥' : key === '\t' ? 'Tab' : key}
-          </AppText>
+            <AppText variant="mono" className="text-xs text-white/90">
+              {key === '  ' ? '⇥' : key === '\t' ? 'Tab' : key}
+            </AppText>
+          </Pressable>
         ))}
-        <AppText
+        <Pressable
+          accessibilityRole="button"
           onPress={goBack}
-          className="ml-auto rounded-lg bg-slate-800 px-3 py-2 text-sm text-slate-300"
+          className="ml-auto h-8 items-center justify-center rounded-lg bg-[#0091FF] px-3 active:bg-[#0077ED]"
         >
-          Done
-        </AppText>
+          <AppText className="text-xs font-semibold text-white">
+            Done
+          </AppText>
+        </Pressable>
       </View>
     </Screen>
   );
