@@ -36,7 +36,7 @@ Everything is **TypeScript**. Choices and their rationale are argued in full in
 | Terminal streaming | node-pty → WebSocket → xterm.js / RN terminal | Standard, battle-tested pattern; flow-control to avoid buffer drops. |
 | File sync | CLI agent: chokidar + delta hashing over WebSocket | Low-CPU `fs.watch`; rsync-style delta transfer (mtime + size + hash). |
 | Local desktop runtime | Cloudflare Tunnel (demo) / Tailscale · Headscale (prod) | Outbound-only, NAT/CGNAT traversal, no port forwarding, native WebSocket. |
-| On-device LLM | llama.rn (llama.cpp) + GGUF **Q4_K_M** model | Explains failed commands on-device, offline — independent of backend scale. |
+| AI explanations | Server-side OpenAI-compatible provider; optional llama.rn + GGUF | Works automatically without shipping API keys to phones, while keeping opt-in offline inference available. |
 | Container isolation | Hardened Docker + **gVisor** (`runsc`) demo; Firecracker / Kata (prod) | Docker alone is not a security boundary for untrusted code. |
 | Reverse proxy / TLS | Caddy | Automatic Let's Encrypt, WebSocket passthrough, lowest friction. |
 | Demo host | Oracle Cloud Always Free **ARM** (2 OCPU / 12 GB) | Free ARM tier; fallback Hetzner or Oracle PAYG. |
@@ -94,9 +94,11 @@ pnpm mobile:dev      # Expo dev server
 
 ## Status
 
-The **backend is built end-to-end** (everything except the mobile app UI and the
-on-device LLM, which lives on the phone). All six workspaces build and type-check,
-and the unit tests pass.
+The backend and the native mobile client are implemented end-to-end. The Expo app
+now covers authentication, projects, files, editing, terminal sessions, activity,
+Git, account/runtime settings, and optional on-device GGUF explanations. See the
+[mobile guide](./mobile/README.md) for setup, EAS builds, and current workflow
+constraints.
 
 | Area | State |
 |---|---|
@@ -110,7 +112,7 @@ and the unit tests pass.
 | Git from the phone (status/commit/push/…) | ✅ `/projects/:id/git/*` (simple-git) |
 | Execution-status reconciliation (worker → Redis → DB) | ✅ `ExecutionReconciler` (worker never touches the DB) |
 | Queue dashboard | ✅ Bull Board at `/admin/queues` (basic-auth) |
-| Mobile app UI · on-device LLM | ⏳ out of scope for this backend pass |
+| Mobile app UI · on-device LLM | ✅ Expo/NativeWind client + optional imported GGUF model |
 
 **Architecture note:** the execution worker (the untrusted-code blast radius) never
 touches Postgres. It publishes lifecycle events on Redis; the API reconciles them into
@@ -155,3 +157,14 @@ curl -s localhost:3000/jobs -H "authorization: Bearer $TOKEN" \
 For the desktop-runtime path, run `pnpm --filter @pocketdev/desktop-agent start` with
 `POCKETDEV_TOKEN` + `JWT_SECRET` set, expose it via `cloudflared`, and `POCKETDEV_TUNNEL_URL`
 will make the API route that user's sessions to the desktop instead of the cloud.
+
+For on-demand explanations of terminal output, warnings, and errors, add an
+OpenRouter key to `server/.env`:
+
+```dotenv
+OPENROUTER_API_KEY=sk-or-v1-...
+AI_MODEL=meta-llama/llama-3.3-70b-instruct
+```
+
+The mobile app calls the authenticated backend endpoint and never receives the
+provider key. `GROQ_API_KEY` is also supported as a zero-code alternative.

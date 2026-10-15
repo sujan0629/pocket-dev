@@ -18,8 +18,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "server:dev": "pnpm --filter @pocketdev/server start:dev",
-    "mobile:dev": "pnpm --filter mobile dev",
+    "mobile:dev": "pnpm --filter @pocketdev/mobile dev",
     "worker:dev": "pnpm --filter @pocketdev/execution-worker dev",
+    "desktop:dev": "pnpm --filter @pocketdev/desktop-agent dev",
     "db:generate": "pnpm --filter @pocketdev/server db:generate",
     "db:migrate": "pnpm --filter @pocketdev/server db:migrate"
   },
@@ -36,7 +37,8 @@
       "@prisma/engines",
       "prisma",
       "esbuild",
-      "node-pty"
+      "node-pty",
+      "llama.rn"
     ]
   }
 }

@@ -3,19 +3,26 @@
     "name": "PocketDev",
     "slug": "pocketdev",
     "version": "0.1.0",
+    "icon": "./assets/images/pocketdev-icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "pocketdev",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pocketdev.app",
+      "bundleIdentifier": "com.billjeshbaidya.pocketdev",
       "infoPlist": {
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera.",
-        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos."
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos.",
+        "NSFaceIDUsageDescription": "Use Face ID to verify your identity in PocketDev.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.pocketdev.app"
+      "package": "com.billjeshbaidya.pocketdev",
+      "permissions": []
     },
     "web": {
       "bundler": "metro",
@@ -29,10 +36,52 @@
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
         }
+      ],
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-file-system",
+        {
+          "supportsOpeningDocumentsInPlace": true,
+          "enableFileSharing": true
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Use Face ID to verify your identity in PocketDev."
+        }
+      ],
+      "expo-font",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#070A0F",
+          "image": "./assets/images/pocketdev-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain"
+        }
+      ],
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-sharing",
+      "expo-build-properties",
+      [
+        "llama.rn",
+        {
+          "enableEntitlements": false,
+          "entitlementsProfile": "production",
+          "forceCxx20": true,
+          "enableOpenCLAndHexagon": true
+        }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "353633f1-556d-46a1-9a50-cb14d6e45e7f"
+      }
     }
   }
 }

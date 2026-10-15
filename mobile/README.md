@@ -1,87 +1,224 @@
-# Expo NativeWind Template
+# PocketDev Mobile
 
-A reusable Expo starter with a simple tab app shell and a neutral default setup that does not assume your branding, backend, or Expo account.
+PocketDev Mobile is the Expo client for the PocketDev cloud development
+environment. It is a native, touch-first workspace for browsing a synced project,
+editing files, running terminal commands, and handling Git from an iPhone or
+Android device.
 
-## Stack
+## What works
 
-- Expo SDK 54
-- Expo Router v6
-- NativeWind v4
-- TanStack Query v5
-- Axios
-- Expo Image Picker
-- React Native Toast Message
-- React Native SVG Transformer
+- Email registration, login, secure JWT persistence, session restoration, and
+  logout
+- Runtime API server selection with a `/health` connection check
+- Project list, blank project creation, connected-desktop drive/folder linking,
+  workspace summary, refresh, and deletion
+- Searchable file tree, file and folder deletion, text-file creation, editing,
+  saving, and clipboard copy
+- Real queued terminal sessions over the PocketDev raw WebSocket PTY protocol,
+  including a persistent interactive shell, visible starting directory, live
+  input/output, cancellation, and cloud/desktop target status
+- Activity dashboard with job filters and live-session polling
+- Git initialization, status, file diffs, commit history, commit-all, origin
+  configuration, push with live Git phase/percentage feedback, and pull
+- Account, demo plan, runner, API, secure-session, and device-biometric status
+- On-demand backend AI explanations for successful output, warnings, logs, and
+  failed commands through an OpenAI-compatible provider, with optional private
+  on-device GGUF inference through `llama.rn`
 
-## Quick Start
+The UI uses Expo Router, NativeWind, TanStack Query, and shared components under
+`components/ui`. API calls are centralized in `api/`, and authentication,
+terminal, and local-model behavior are kept out of route components.
+
+## Requirements
+
+- Node.js 20 or newer
+- pnpm 10.28.2
+- PostgreSQL and Redis for the PocketDev API
+- Docker for cloud terminal execution
+- An Expo account with access to EAS project
+  `353633f1-556d-46a1-9a50-cb14d6e45e7f`
+- For a physical iPhone development build, an Apple Developer account and a
+  registered device
+
+## Run the full local stack
+
+From the repository root:
 
 ```bash
-npm install
-cp .env.example .env
-npm run dev
+pnpm install
+docker compose up -d
+cp server/.env.example server/.env
+cp mobile/.env.example mobile/.env
+pnpm db:migrate
+pnpm --filter @pocketdev/server db:seed
 ```
 
-On Windows PowerShell, use `cmd /c` if script execution is blocked:
-
-```powershell
-cmd /c npm install
-cmd /c copy .env.example .env
-cmd /c npm run dev
-```
-
-## Template Defaults
-
-- The app opens into `/(tabs)/home` after a short loading state in `app/index.tsx`.
-- The project does not include authentication or persisted session handling by default.
-- `app.json` does not include an EAS project ID or OTA updates URL.
-- No app icons or splash assets are wired by default.
-
-## Environment
-
-Create a `.env` file from `.env.example` and set:
+Then run the API, execution worker, and Metro in separate terminals:
 
 ```bash
-EXPO_PUBLIC_API_URL=https://api.example.com
+pnpm server:dev
+pnpm worker:dev
+pnpm mobile:dev
 ```
 
-The shared Axios client in `api/axios.ts` fails fast when `EXPO_PUBLIC_API_URL` is missing, so fresh clones do not silently call a fake placeholder backend.
+The API defaults to `http://localhost:3000`. The cloud execution worker needs
+Docker and Redis. To import an existing local repository, use the PocketDev CLI
+sync agent described in the [repository-level README](../README.md). The desktop
+agent is optional; when it is online with a valid tunnel, terminal jobs can run
+there instead of in the cloud worker.
 
-## Project Structure
+## Configure the API URL
+
+`EXPO_PUBLIC_API_URL` in `mobile/.env` supplies the initial API URL:
+
+```dotenv
+EXPO_PUBLIC_API_URL=http://localhost:3000
+```
+
+The connection screen can change that URL without rebuilding the native app. It
+stores the selected URL on the device and restores it on startup; a saved runtime
+value takes precedence over the value compiled from `.env`. The login screen
+links to this connection screen, and authenticated users can open it from
+Settings.
+
+Use the address appropriate for the device:
+
+| Client | Typical local URL |
+| --- | --- |
+| iOS simulator | `http://localhost:3000` |
+| Android emulator | `http://10.0.2.2:3000` |
+| Physical device | `http://<computer-LAN-IP>:3000` |
+| Remote/test server | `https://api.example.com` |
+
+The phone must be able to reach the address. `localhost` on a physical phone is
+the phone itself, not the development computer. Prefer HTTPS for remote and
+production servers. Never put secrets in an `EXPO_PUBLIC_*` variable because
+Expo embeds those values in the client bundle.
+
+If the selected server changes, its existing JWT may not be valid on the new
+server; sign out and log in against the new server when that happens.
+
+## Develop with a custom client
+
+From the repository root, start Metro:
+
+```bash
+pnpm mobile:dev
+```
+
+To explicitly target an installed development client:
+
+```bash
+cd mobile
+pnpm exec expo start --dev-client
+```
+
+Expo Go is not enough for this project because the app includes custom native
+modules such as `llama.rn` and React Native Keyboard Controller.
+
+## Build the iOS development client
+
+Run the EAS command from `mobile/`:
+
+```bash
+cd mobile
+pnpm dlx eas-cli build --platform ios --profile development
+```
+
+If `eas-cli` is already installed globally, the equivalent command is:
+
+```bash
+eas build --platform ios --profile development
+```
+
+The `development` profile creates an internal-distribution development client.
+Its app identity is:
+
+- Display name: `PocketDev`
+- Slug and URL scheme: `pocketdev`
+- iOS bundle identifier: `com.billjeshbaidya.pocketdev`
+- Android application ID: `com.billjeshbaidya.pocketdev`
+
+The optional `llama.rn` extended-address-space and increased-memory iOS
+entitlements are disabled. The automatic server assistant does not need them,
+and disabling them lets development and preview builds use ordinary ad hoc
+provisioning profiles. If local inference later needs those entitlements, enable
+them only after the Apple App ID and provisioning profiles have the matching
+capabilities.
+
+Rebuild the development client after adding, removing, or upgrading a dependency
+with native iOS code, changing an Expo config plugin, or changing native
+entitlements. Normal TypeScript, NativeWind, and component changes can be loaded
+through Metro without another EAS build.
+
+## Pre-build checks
+
+Run these from `mobile/` before spending time on an EAS build:
+
+```bash
+pnpm exec expo install --check
+pnpm dlx expo-doctor@latest
+pnpm run typecheck
+pnpm run lint
+```
+
+An additional production-style JavaScript bundle check is:
+
+```bash
+pnpm exec expo export --platform ios --output-dir .tmp-ios-export
+```
+
+Delete that temporary export directory after inspection. Keep `pnpm-lock.yaml`
+committed so EAS installs the exact dependency graph that passed these checks.
+
+## AI terminal explanations
+
+Failed terminal commands use the authenticated backend assistant automatically.
+Configure an OpenAI-compatible provider in `server/.env`; no API key or model
+file is stored in the mobile app:
+
+```dotenv
+OPENROUTER_API_KEY=sk-or-v1-...
+AI_MODEL=meta-llama/llama-3.3-70b-instruct
+```
+
+`llama.rn` remains an optional privacy mode. A user who deliberately opens
+**Settings > On-device AI** can import a GGUF model and run explanations offline.
+PocketDev copies the selected model into its application documents directory and
+never uploads it. Removing the local model deletes PocketDev's copy, not the
+source file selected from the Files app.
+
+## Current workflow constraints
+
+- A terminal WebSocket is live only while its terminal screen is connected.
+  Sessions cannot yet be reattached after navigating away or losing the socket.
+- Free-tier jobs can wait in the shared queue. Keep the terminal screen open
+  while a job is waiting.
+- The mobile editor handles backend-supported text files, with the server's
+  current 2 MiB per-file limit.
+- Git commit stages every changed file; per-file staging is not implemented.
+- Push and pull use Git credentials configured on the PocketDev server or desktop
+  runtime. The mobile app does not collect GitHub passwords or SSH keys.
+- The biometric row verifies device support and can run a local authentication
+  test; it is not a replacement for the server login.
+
+## Project structure
 
 ```text
-app/
-  _layout.tsx
-  index.tsx
-  +not-found.tsx
-  (tabs)/
-    _layout.tsx
-    home.tsx
-    explore.tsx
-    notifications.tsx
-    profile.tsx
-api/
-  axios.ts
-components/
-lib/
-assets/
-global.css
-tailwind.config.js
-babel.config.js
-metro.config.js
-app.json
-eas.json
+mobile/
+  app/             Expo Router layouts and screens
+    (auth)/        Login, registration, and server connection
+    (tabs)/        Projects, activity, and settings
+    projects/      Workspace, files, editor, terminal, and Git
+    settings/      Local assistant and shared settings routes
+  api/             Axios client and typed PocketDev endpoint wrappers
+  components/      Reusable feature and UI components
+  constants/       Theme tokens
+  hooks/           Network and terminal-session behavior
+  providers/       Authentication/session provider
+  services/        Runtime API settings and local GGUF lifecycle
+  types/           API and asset declarations
+  utils/           Formatting, class-name, and error helpers
+  app.json         Expo identity, plugins, entitlements, icon, and splash
+  eas.json         EAS development, preview, and production profiles
 ```
-
-## Customize Before Shipping
-
-- Update the app identity fields in `app.json`.
-- Replace the default color palette in `tailwind.config.js`.
-- Add your own icons and splash assets, then reference them in `app.json`.
-- Expand `api/axios.ts` with auth headers, interceptors, or other API behavior if your app needs them.
-- Run `eas init` when you are ready to connect the app to your own Expo account and project.
-
-## Notes
-
-- `expo-router`, `nativewind`, and the SVG transformer are already configured.
-- TanStack Query is wired at the app root so you can add server-state hooks without more setup.
-- Toast support is already mounted in the root layout.

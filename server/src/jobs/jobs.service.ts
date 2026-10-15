@@ -48,7 +48,7 @@ export class JobsService {
    * - Decision 4 routing: run on the developer's desktop if its agent is online
    *   AND advertised a tunnel URL, otherwise fall back to the cloud worker.
    */
-  async create(userId: string, tier: string, dto: CreateJobDto): Promise<StartSessionResponse> {
+  async create(userId: string, dto: CreateJobDto): Promise<StartSessionResponse> {
     const project = await this.prisma.project.findUnique({ where: { id: dto.projectId } });
     if (!project || project.userId !== userId) {
       throw new NotFoundException('Project not found');
@@ -56,7 +56,7 @@ export class JobsService {
 
     await this.enforceQuota(userId);
 
-    const route = await this.resolveTarget(userId);
+    const route = await this.resolveTarget(userId, dto.projectId);
 
     const job = await this.prisma.job.create({
       data: {
@@ -79,7 +79,14 @@ export class JobsService {
     const wsToken = this.mintPtyToken(userId, session.id, dto.projectId);
 
     if (route.target === ExecutionTarget.CLOUD) {
-      const isPaid = tier === Tier.PAID;
+      // Read the current database tier instead of trusting the JWT claim. Demo
+      // upgrades take effect immediately without forcing the mobile app to log
+      // out and obtain a new token.
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { tier: true },
+      });
+      const isPaid = currentUser?.tier === Tier.PAID;
       const queued = await this.queue.add(
         RUN_COMMAND_JOB,
         {
@@ -107,7 +114,10 @@ export class JobsService {
       jobId: job.id,
       sessionId: session.id,
       target: route.target,
-      wsUrl: route.target === ExecutionTarget.CLOUD ? this.workerWsUrl() : route.tunnelUrl!,
+      wsUrl:
+        route.target === ExecutionTarget.CLOUD
+          ? this.workerWsUrl()
+          : `/desktop/pty?token=${encodeURIComponent(wsToken)}`,
       wsToken,
     };
   }
@@ -125,13 +135,24 @@ export class JobsService {
   /** Desktop-if-present-else-cloud routing (Decision 4). */
   private async resolveTarget(
     userId: string,
+    projectId: string,
   ): Promise<{ target: ExecutionTarget; tunnelUrl?: string }> {
     const presence = await this.prisma.desktopPresence.findUnique({ where: { userId } });
-    const windowMs =
-      this.config.get<number>('execution.desktopHeartbeatWindowMs') ?? 30_000;
+    const windowMs = this.config.get<number>('execution.desktopHeartbeatWindowMs') ?? 30_000;
+    const linkedToProject =
+      (Array.isArray(presence?.linkedProjects) &&
+        presence.linkedProjects.some(
+          (link) =>
+            typeof link === 'object' &&
+            link !== null &&
+            !Array.isArray(link) &&
+            link.projectId === projectId,
+        )) ||
+      presence?.projectId === projectId;
     const fresh =
       !!presence?.online &&
       !!presence.tunnelUrl &&
+      linkedToProject &&
       Date.now() - presence.lastHeartbeat.getTime() < windowMs;
     return fresh
       ? { target: ExecutionTarget.DESKTOP, tunnelUrl: presence!.tunnelUrl! }

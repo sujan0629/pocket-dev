@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import type { FileManifest } from '@pocketdev/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 
@@ -11,6 +12,19 @@ export class ProjectsService {
     return this.prisma.project.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
+      // File manifests can grow large; list cards only need project metadata.
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+        slug: true,
+        description: true,
+        desktopPath: true,
+        desktopLinkedAt: true,
+        lastSyncedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   }
 
@@ -43,12 +57,28 @@ export class ProjectsService {
     return { deleted: true };
   }
 
-  /** Updates the JSONB file manifest after a CLI sync (Decision 1: JSONB column). */
-  async updateManifest(userId: string, id: string, manifest: Prisma.InputJsonValue) {
+  async linkDesktop(userId: string, id: string, desktopPath: string) {
     await this.findOne(userId, id);
     return this.prisma.project.update({
       where: { id },
-      data: { manifest, lastSyncedAt: new Date() },
+      data: {
+        desktopPath: desktopPath.trim(),
+        desktopLinkedAt: new Date(),
+      },
+    });
+  }
+
+  /** Updates the JSONB file manifest after a CLI sync (Decision 1: JSONB column). */
+  async updateManifest(userId: string, id: string, manifest: FileManifest) {
+    await this.findOne(userId, id);
+    return this.prisma.project.update({
+      where: { id },
+      // FileManifest contains only JSON primitives, but Prisma's generated
+      // InputJsonValue cannot structurally recognize its nested interfaces.
+      data: {
+        manifest: manifest as unknown as Prisma.InputJsonValue,
+        lastSyncedAt: new Date(),
+      },
     });
   }
 
