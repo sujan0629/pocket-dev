@@ -1,170 +1,95 @@
 # PocketDev
 
-> Your dev machine in your pocket — sync your local codebase, then browse, edit, run, and commit it from your phone in a real terminal, with the PC powered off.
+**Browse code. Edit files. Run a real terminal. From your phone.**
 
-PocketDev is a mobile-native cloud development environment (KU COMP 207 project). This
-repo is a **pnpm + Turborepo monorepo**. Architecture and every technology choice are
-documented in [`PROJECT-BRIEF.md`](./PROJECT-BRIEF.md) and [`BUILD-PLAN.md`](./BUILD-PLAN.md).
+PocketDev is a native mobile development workspace for your own desktop or a self-hosted execution worker. Sync a project, edit it on iOS or Android, run commands, and review or commit changes without opening a laptop.
 
-## Workspaces
+![PocketDev showing project selection, file browsing, an interactive terminal and Git on mobile](docs/media/pocketdev-overview.webp)
 
-| Path | Package | Role |
-|---|---|---|
-| [`mobile/`](./mobile) | `mobile` | React Native + Expo app (expo-router + NativeWind). Touch-first UI. |
-| [`server/`](./server) | `@pocketdev/server` | NestJS **modular monolith** — API/auth/projects/jobs/sessions/billing + BullMQ queue **producer**. |
-| [`services/execution-worker/`](./services/execution-worker) | `@pocketdev/execution-worker` | The one split-out process — BullMQ **consumer**: Docker + node-pty + WebSocket PTY streaming. |
-| [`services/cli-agent/`](./services/cli-agent) | `@pocketdev/cli-agent` | CLI sync agent — chokidar delta-sync over WebSocket. |
-| [`services/desktop-agent/`](./services/desktop-agent) | `@pocketdev/desktop-agent` | Local desktop runtime — same PTY-over-WS server + presence heartbeat (Cloudflare Tunnel). |
-| [`packages/shared/`](./packages/shared) | `@pocketdev/shared` | Shared TypeScript contracts: queue payloads, PTY/sync/exec-event/git/file protocols, domain enums. |
-| [`packages/pty-core/`](./packages/pty-core) | `@pocketdev/pty-core` | Shared PTY-over-WebSocket gateway (node-pty + ws + flow control + JWT). Used by both the worker (Docker runner) and desktop agent (host runner). |
+[Set up locally](#try-it-locally) · [Mobile guide](mobile/README.md) · [Architecture](#how-it-works) · [Contribute](CONTRIBUTING.md)
 
-The modular monolith's modules **are** the future service boundaries. The only genuine
-seam split out now is the execution engine (Build Plan, Decision 2).
+## What you can do
 
-## Tech stack
+- **Work in a real terminal:** interactive PTY sessions, streamed output, keyboard controls and cancellation.
+- **Keep code moving:** watch a local folder and sync changes through the CLI agent; browse and edit files from the phone.
+- **Choose where commands run:** use a connected desktop, or the cloud worker for synced projects. Cloud execution needs a running server and worker; powering off the desktop does not make the phone execute the project locally.
+- **Handle Git from mobile:** inspect status and diffs, read history, commit, pull and push using the configured runtime credentials.
+- **Ask about terminal output:** use a server-side AI provider, or optionally import a compatible GGUF model for on-device explanations. Offline explanations do not make remote terminals work offline.
 
-Everything is **TypeScript**. Choices and their rationale are argued in full in
-[`BUILD-PLAN.md`](./BUILD-PLAN.md); the summary:
+**Status:** working prototype with a native client and self-hosted backend. Bring your own infrastructure. There is no hosted public demo or published app-store download in this repository.
 
-| Component | Chosen technology | Why |
-|---|---|---|
-| Mobile app | React Native + Expo (expo-router, NativeWind) | Native, touch-first app — not a browser IDE shrunk onto a phone. Locked choice. |
-| Backend API | NestJS 11 — **modular monolith** | Correct architecture at this scale; modules **are** the future service boundaries. |
-| Database | PostgreSQL + Prisma | Relational core (users → projects → jobs → sessions); JSONB for file manifests; ACID; type-safe DX. |
-| Queue / ephemeral state | Redis + BullMQ | Job scheduling, session state, worker coordination. Free tier shares the queue; paid jumps it. |
-| Execution engine | Separate Node process: node-pty + Dockerode + `ws` | The one split-out process — different runtime profile + untrusted-code blast-radius isolation. |
-| Terminal streaming | node-pty → WebSocket → xterm.js / RN terminal | Standard, battle-tested pattern; flow-control to avoid buffer drops. |
-| File sync | CLI agent: chokidar + delta hashing over WebSocket | Low-CPU `fs.watch`; rsync-style delta transfer (mtime + size + hash). |
-| Local desktop runtime | Cloudflare Tunnel (demo) / Tailscale · Headscale (prod) | Outbound-only, NAT/CGNAT traversal, no port forwarding, native WebSocket. |
-| AI explanations | Server-side OpenAI-compatible provider; optional llama.rn + GGUF | Works automatically without shipping API keys to phones, while keeping opt-in offline inference available. |
-| Container isolation | Hardened Docker + **gVisor** (`runsc`) demo; Firecracker / Kata (prod) | Docker alone is not a security boundary for untrusted code. |
-| Reverse proxy / TLS | Caddy | Automatic Let's Encrypt, WebSocket passthrough, lowest friction. |
-| Demo host | Oracle Cloud Always Free **ARM** (2 OCPU / 12 GB) | Free ARM tier; fallback Hetzner or Oracle PAYG. |
-| Process manager | PM2 or systemd | Keep the API + worker alive, restart on crash. |
-| Monorepo tooling | pnpm workspaces + Turborepo | Task orchestration + caching across workspaces. |
+## Try it locally
 
-### Key architecture decisions (from the build plan)
-
-1. **PostgreSQL + Prisma**, not MongoDB — the data is overwhelmingly relational; JSONB covers the ~20% document-shaped file manifests.
-2. **Modular monolith + exactly one worker**, not microservices — the only legitimate seam is splitting the execution engine from the CRUD API.
-3. **All TypeScript**, no Go — `node-pty` is a native Node addon; the rest is I/O-bound.
-4. **Reverse tunnel, not a custom relay** — Cloudflare Tunnel for the demo, Tailscale for production.
-5. **Docker is not enough for untrusted code** — layer gVisor now, microVMs (Firecracker/Kata) at scale.
-
-## Prerequisites
-
-- Node.js ≥ 20 (this repo is on 22 — see [`.nvmrc`](./.nvmrc))
-- pnpm ≥ 10 (`corepack enable`)
-- Docker (for local Postgres + Redis, and later the execution sandbox)
-
-## Getting started
+Use **Node 22** (see `.nvmrc`), **pnpm 10.28.2**, and Docker with Compose. Native `node-pty` builds may need a C/C++ toolchain. The mobile client requires a custom development build; Expo Go is not sufficient.
 
 ```bash
-# 1. Install everything
-pnpm install
-
-# 2. Start local Postgres + Redis
+git clone https://github.com/sujan0629/pocket-dev.git
+cd pocket-dev
+node scripts/prepare-local.mjs
+pnpm install --frozen-lockfile
 docker compose up -d
-
-# 3. Configure env
-cp server/.env.example server/.env
-cp mobile/.env.example  mobile/.env
-
-# 4. Create the database schema + seed two demo accounts
-pnpm --filter @pocketdev/server db:migrate     # runs prisma migrate dev
-pnpm --filter @pocketdev/server db:seed        # free@pocketdev.dev / paid@pocketdev.dev (password123)
-
-# 5. Run
-pnpm server:dev      # NestJS API on http://localhost:3000
-pnpm worker:dev      # execution worker (needs Redis)
-pnpm mobile:dev      # Expo dev server
+pnpm --filter @pocketdev/shared --filter @pocketdev/pty-core -r build
+pnpm db:generate
+pnpm db:migrate
+pnpm --filter @pocketdev/server db:seed
 ```
 
-## Common scripts (root)
+The setup helper creates missing local environment files with a random JWT secret. Existing files are preserved. Compose starts **PostgreSQL and Redis only**, not the app. The seeded demo accounts are `free@pocketdev.dev` and `paid@pocketdev.dev`, password `password123`; use them only in local development.
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Run every workspace's dev task via Turbo |
-| `pnpm build` | Build all workspaces |
-| `pnpm typecheck` | Type-check all workspaces |
-| `pnpm lint` | Lint all workspaces |
-| `pnpm format` | Prettier-format the repo |
-| `pnpm server:dev` / `worker:dev` / `mobile:dev` | Run a single app |
-| `pnpm db:migrate` / `db:generate` | Prisma migrate / generate (server) |
-
-## Status
-
-The backend and the native mobile client are implemented end-to-end. The Expo app
-now covers authentication, projects, files, editing, terminal sessions, activity,
-Git, account/runtime settings, and optional on-device GGUF explanations. See the
-[mobile guide](./mobile/README.md) for setup, EAS builds, and current workflow
-constraints.
-
-| Area | State |
-|---|---|
-| Auth / users / projects / billing / tiers | ✅ API complete |
-| CLI delta-sync → server file store (JSONB manifest) | ✅ `services/cli-agent` + `/sync` gateway |
-| File browse / read / write API | ✅ `GET/PUT/DELETE /projects/:id/file(s)` |
-| Terminal session start + tier-priority queue | ✅ `POST /jobs` → `StartSessionResponse` |
-| Execution engine — hardened Docker + real PTY over WS | ✅ `services/execution-worker` + `packages/pty-core` |
-| gVisor (`runsc`) hardening | ✅ one-env-var switch (`EXECUTION_RUNTIME=runsc`) |
-| Local-desktop runtime + presence routing | ✅ `services/desktop-agent`, desktop-if-present-else-cloud |
-| Git from the phone (status/commit/push/…) | ✅ `/projects/:id/git/*` (simple-git) |
-| Execution-status reconciliation (worker → Redis → DB) | ✅ `ExecutionReconciler` (worker never touches the DB) |
-| Queue dashboard | ✅ Bull Board at `/admin/queues` (basic-auth) |
-| Mobile app UI · on-device LLM | ✅ Expo/NativeWind client + optional imported GGUF model |
-
-**Architecture note:** the execution worker (the untrusted-code blast radius) never
-touches Postgres. It publishes lifecycle events on Redis; the API reconciles them into
-the DB (BUILD-PLAN Decision 2). The PTY-over-WebSocket server is shared code
-(`packages/pty-core`) used by *both* the cloud worker (Docker runner) and the desktop
-agent (host runner).
-
-## Run it
+Start these in separate terminals:
 
 ```bash
-pnpm install
-docker compose up -d                                # Postgres + Redis
-cp .env.example server/.env                          # then edit JWT_SECRET etc.
-pnpm --filter @pocketdev/server db:migrate           # prisma migrate dev
-pnpm --filter @pocketdev/server db:seed              # free@ / paid@pocketdev.dev · password123
-pnpm server:dev                                      # API + /admin/queues on :3000
-pnpm worker:dev                                      # execution worker + PTY gateway on :4100 (needs Docker)
+pnpm server:dev
 ```
-
-## Verification (end-to-end, needs Docker + Postgres + Redis)
 
 ```bash
-# 1. Auth → grab a token
-TOKEN=$(curl -s localhost:3000/auth/login -H 'content-type: application/json' \
-  -d '{"email":"free@pocketdev.dev","password":"password123"}' | jq -r .accessToken)
-
-# 2. Find the seeded project id
-PROJECT=$(curl -s localhost:3000/projects -H "authorization: Bearer $TOKEN" | jq -r '.[0].id')
-
-# 3. Sync a local folder up
-POCKETDEV_TOKEN=$TOKEN pnpm --filter @pocketdev/cli-agent start sync ./some-folder -p $PROJECT
-
-# 4. Start a terminal session (returns wsUrl + wsToken); connect a WS client and
-#    speak the pty-protocol ({type:"start", sessionId, projectId, token}).
-curl -s localhost:3000/jobs -H "authorization: Bearer $TOKEN" \
-  -H 'content-type: application/json' -d "{\"projectId\":\"$PROJECT\",\"command\":\"node -v\"}"
-
-# 5. Freemium: with WORKER_CONCURRENCY=1, a 2nd FREE session queues while a PAID one jumps.
-#    Watch it live in the dashboard at http://localhost:3000/admin/queues (admin/admin).
+pnpm worker:dev
 ```
 
-For the desktop-runtime path, run `pnpm --filter @pocketdev/desktop-agent start` with
-`POCKETDEV_TOKEN` + `JWT_SECRET` set, expose it via `cloudflared`, and `POCKETDEV_TUNNEL_URL`
-will make the API route that user's sessions to the desktop instead of the cloud.
-
-For on-demand explanations of terminal output, warnings, and errors, add an
-OpenRouter key to `server/.env`:
-
-```dotenv
-OPENROUTER_API_KEY=sk-or-v1-...
-AI_MODEL=meta-llama/llama-3.3-70b-instruct
+```bash
+pnpm mobile:dev
 ```
 
-The mobile app calls the authenticated backend endpoint and never receives the
-provider key. `GROQ_API_KEY` is also supported as a zero-code alternative.
+Follow the [mobile build guide](mobile/README.md) for a custom iOS or Android client. You need your own Expo/EAS project and signing configuration; the checked-in EAS project is not a shared public build service.
+
+On a physical phone, select the development computer's LAN address in the connection screen, not `localhost`. Set `WORKER_WS_URL` in `server/.env` to an address the phone can reach, such as `ws://<computer-LAN-IP>:4100`. For remote hosting use HTTPS/WSS and configure authentication and network access before exposing services.
+
+For sync, desktop execution, AI configuration and verification commands, see the [development guide](docs/DEVELOPMENT.md). Supported Git actions depend on the credentials available on the selected runtime.
+
+## How it works
+
+```text
+Phone app  ── HTTP / WebSocket ──> NestJS API ──> PostgreSQL
+                                      │
+CLI sync agent ── file deltas ──────────┤
+                                      │ BullMQ / Redis
+                                      ▼
+                              Execution worker ──> Docker session
+Phone app  <──── PTY over WebSocket ────┘
+
+Or: API selects an online desktop agent; the phone connects to its PTY gateway.
+```
+
+The API owns accounts, project metadata and queue submission. The worker executes sessions and publishes lifecycle events through Redis; it does not connect directly to PostgreSQL. A shared PTY gateway powers cloud and desktop sessions.
+
+| Workspace | Responsibility |
+| --- | --- |
+| [`mobile`](mobile/) | Expo / React Native client, editor, terminal, Git and optional local AI |
+| [`server`](server/) | NestJS API, Prisma, project storage and job reconciliation |
+| [`services/execution-worker`](services/execution-worker/) | BullMQ consumer and Docker-backed terminal execution |
+| [`services/desktop-agent`](services/desktop-agent/) | Host terminal gateway, folder linking and presence |
+| [`services/cli-agent`](services/cli-agent/) | Watched-folder delta sync |
+| [`packages/pty-core`](packages/pty-core/) | Shared PTY transport and flow control |
+| [`packages/shared`](packages/shared/) | TypeScript contracts |
+
+## Execution boundaries
+
+The default Docker runtime is `runc`. Set `EXECUTION_RUNTIME=runsc` only on a host where gVisor is installed and configured. Runtime selection is implemented; that setting alone is not evidence of a verified gVisor deployment or secure public multi-tenancy. Firecracker, Kata and production networking alternatives in planning documents are not delivered runtime features.
+
+Desktop mode executes commands on the selected host and depends on that host's permissions. Use trusted projects and an environment you control. Local Compose credentials and demo accounts are development conveniences.
+
+## Contributing and project history
+
+Start with [CONTRIBUTING.md](CONTRIBUTING.md). Report a reproducible issue or propose a small change before a large rewrite. The [project brief](PROJECT-BRIEF.md), [build plan](BUILD-PLAN.md) and [academic origin and team attribution](docs/ACADEMIC.md) remain available as background; source code and current workspace guides determine what is implemented.
+
+**License:** no top-level open-source license is currently declared. A license decision needs the maintainers' agreement; existing third-party licenses still apply.

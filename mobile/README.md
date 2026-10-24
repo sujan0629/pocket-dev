@@ -35,8 +35,8 @@ terminal, and local-model behavior are kept out of route components.
 - pnpm 10.28.2
 - PostgreSQL and Redis for the PocketDev API
 - Docker for cloud terminal execution
-- An Expo account with access to EAS project
-  `353633f1-556d-46a1-9a50-cb14d6e45e7f`
+- Your own Expo account and EAS project configuration. The checked-in project
+  identifier does not grant build access to external contributors.
 - For a physical iPhone development build, an Apple Developer account and a
   registered device
 

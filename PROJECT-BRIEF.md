@@ -1,9 +1,6 @@
 # PocketDev, Project Brief
 
-**Course:** COMP 207, Kathmandu University, Department of Computer Science and Engineering
-**Type:** Year II / Semester II project (4th semester)
-**Team:** Billjesh Man Baidya, Sujan Bhatta, Yashwant Raj Dhakal, Shaikh Abdullah Nepal
-**Supervisor:** Mr. Suman Shrestha
+Project origin and team attribution: [docs/ACADEMIC.md](docs/ACADEMIC.md).
 
 ---
 
